@@ -323,8 +323,8 @@ export function MyTasksPanel({
           {selectedMenuName ? `'${selectedMenuName}' 관련 주문 내역이 없습니다.` : "관련 주문 내역이 없습니다."}
         </p>
       ) : (
-        <div className="kds-table-wrap kds-history-table-wrap">
-          <table className="kds-table kds-history-table">
+        <div className="kds-table-wrap">
+          <table className="kds-table">
             <thead>
               <tr>
                 <th>주문번호</th>
@@ -340,11 +340,11 @@ export function MyTasksPanel({
                   key={`${row.orderNumber}-${row.itemId}-${idx}`}
                   className={row.status === "완료" ? "row-done" : row.delayed ? "row-delayed" : ""}
                 >
-                  <td className="kds-table-cell-muted" data-label="주문번호">{row.orderNumber}</td>
-                  <td data-label="메뉴">{row.menuName}</td>
-                  <td style={{ textAlign: "center", fontWeight: 700 }} data-label="수량">{row.quantity}</td>
-                  <td className="kds-table-cell-muted" data-label="주문시각">{formatHistoryTime(row.timestamp)}</td>
-                  <td style={{ textAlign: "center" }} data-label="상태">
+                  <td className="kds-table-cell-muted">{row.orderNumber}</td>
+                  <td>{row.menuName}</td>
+                  <td style={{ textAlign: "center", fontWeight: 700 }}>{row.quantity}</td>
+                  <td className="kds-table-cell-muted">{formatHistoryTime(row.timestamp)}</td>
+                  <td style={{ textAlign: "center" }}>
                     {row.delayed ? (
                       <span className="kds-badge red">지연</span>
                     ) : (

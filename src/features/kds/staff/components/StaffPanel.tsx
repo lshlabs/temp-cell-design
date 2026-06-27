@@ -161,8 +161,8 @@ export function StaffPanel({
       {loading ? <div className="kds-empty">직원 목록을 불러오는 중…</div> : null}
 
       {!loading ? (
-        <div className="kds-table-wrap kds-staff-table-wrap">
-          <table className="kds-table kds-staff-table">
+        <div className="kds-table-wrap">
+          <table className="kds-table">
             <thead className="align-middle">
               <tr>
                 <th>이름</th>
@@ -176,24 +176,24 @@ export function StaffPanel({
             <tbody>
               {staffList.map((member) => (
                 <tr key={member.id} className={!member.active ? "row-inactive" : ""}>
-                  <td data-label="이름">
+                  <td>
                     <div className="kds-table-cell-name">
                       <div className="kds-staff-avatar-sm" aria-hidden="true">{member.name.slice(0, 1)}</div>
                       <span>{member.name}</span>
                     </div>
                   </td>
-                  <td className="kds-table-cell-muted" data-label="아이디">{member.loginId}</td>
-                  <td style={{ textAlign: "center" }} data-label="역할">
+                  <td className="kds-table-cell-muted">{member.loginId}</td>
+                  <td style={{ textAlign: "center" }}>
                     <span className={`kds-badge${member.positionLabel === "매니저" ? " accent" : ""}`}>
                       {member.positionLabel ?? "직원"}
                     </span>
                   </td>
-                  <td style={{ textAlign: "center" }} data-label="상태">
+                  <td style={{ textAlign: "center" }}>
                     <span className={`kds-badge${member.active ? " green" : " dim"}`}>
                       {member.active ? "활성" : "비활성"}
                     </span>
                   </td>
-                  <td data-label="PIN">
+                  <td>
                     {pinVisible === member.id && revealedPin ? (
                       <div className="kds-pin-reveal">
                         <span className="kds-pin-value">{revealedPin}</span>
@@ -202,7 +202,7 @@ export function StaffPanel({
                       <span className="kds-pin-hidden">••••</span>
                     )}
                   </td>
-                  <td data-label="작업">
+                  <td>
                     <div className="kds-table-actions">
                       <button className="kds-btn-ghost kds-btn-xs" disabled={saving} onClick={() => setModal({ type: "pin", member })} type="button">PIN 재발급</button>
                       <button className="kds-btn-ghost kds-btn-xs" disabled={saving} onClick={() => openEdit(member)} type="button">수정</button>
