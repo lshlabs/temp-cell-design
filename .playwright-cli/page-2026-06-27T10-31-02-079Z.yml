@@ -1,0 +1,119 @@
+- generic [ref=e3]:
+  - navigation "메인 내비게이션" [ref=e4]:
+    - button "메뉴 열기" [ref=e5] [cursor=pointer]:
+      - img [ref=e6]
+    - generic [ref=e7]:
+      - button "내 업무" [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+        - emphasis [ref=e12]
+      - button "직원" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+    - button "관리" [ref=e20] [cursor=pointer]:
+      - generic [ref=e21]: 관리
+  - generic [ref=e22]:
+    - banner [ref=e23]:
+      - button "매장 상태 변경" [ref=e26] [cursor=pointer]: 영업중
+      - generic [ref=e176]: 직원 관리
+      - generic [ref=e32]:
+        - button "현재 최신 주문 우선, 클릭하여 과거 주문 우선으로 변경" [ref=e33] [cursor=pointer]:
+          - img [ref=e34]
+        - button "주문 새로고침" [ref=e38] [cursor=pointer]:
+          - img [ref=e39]
+    - region "직원 관리" [ref=e177]:
+      - generic [ref=e178]:
+        - generic [ref=e179]:
+          - heading "직원 관리" [level=2] [ref=e180]
+          - paragraph [ref=e181]: 총 4명 · 활성 4명
+        - button "직원 추가" [ref=e182] [cursor=pointer]:
+          - img [ref=e183]
+          - text: 직원 추가
+      - table [ref=e185]:
+        - rowgroup [ref=e186]:
+          - row "이름 주방직원1 아이디 kitchen.kong-1 역할 직원 상태 활성 PIN •••• 작업 PIN 재발급 수정 비활성화" [ref=e187]:
+            - cell "이름 주방직원1" [ref=e188]:
+              - text: 이름
+              - generic [ref=e189]:
+                - generic [ref=e190]: 주
+                - generic [ref=e191]: 주방직원1
+            - cell "아이디 kitchen.kong-1" [ref=e192]
+            - cell "역할 직원" [ref=e193]:
+              - text: 역할
+              - generic [ref=e194]: 직원
+            - cell "상태 활성" [ref=e195]:
+              - text: 상태
+              - generic [ref=e196]: 활성
+            - cell "PIN ••••" [ref=e197]:
+              - text: PIN
+              - generic [ref=e198]: ••••
+            - cell "작업 PIN 재발급 수정 비활성화" [ref=e199]:
+              - text: 작업
+              - generic [ref=e200]:
+                - button "PIN 재발급" [ref=e201] [cursor=pointer]
+                - button "수정" [ref=e202] [cursor=pointer]
+                - button "비활성화" [ref=e203] [cursor=pointer]
+          - row "이름 주방직원2 아이디 kitchen.kong-2 역할 직원 상태 활성 PIN •••• 작업 PIN 재발급 수정 비활성화" [ref=e204]:
+            - cell "이름 주방직원2" [ref=e205]:
+              - text: 이름
+              - generic [ref=e206]:
+                - generic [ref=e207]: 주
+                - generic [ref=e208]: 주방직원2
+            - cell "아이디 kitchen.kong-2" [ref=e209]
+            - cell "역할 직원" [ref=e210]:
+              - text: 역할
+              - generic [ref=e211]: 직원
+            - cell "상태 활성" [ref=e212]:
+              - text: 상태
+              - generic [ref=e213]: 활성
+            - cell "PIN ••••" [ref=e214]:
+              - text: PIN
+              - generic [ref=e215]: ••••
+            - cell "작업 PIN 재발급 수정 비활성화" [ref=e216]:
+              - text: 작업
+              - generic [ref=e217]:
+                - button "PIN 재발급" [ref=e218] [cursor=pointer]
+                - button "수정" [ref=e219] [cursor=pointer]
+                - button "비활성화" [ref=e220] [cursor=pointer]
+          - row "이름 주방직원3 아이디 kitchen.kong-3 역할 직원 상태 활성 PIN •••• 작업 PIN 재발급 수정 비활성화" [ref=e221]:
+            - cell "이름 주방직원3" [ref=e222]:
+              - text: 이름
+              - generic [ref=e223]:
+                - generic [ref=e224]: 주
+                - generic [ref=e225]: 주방직원3
+            - cell "아이디 kitchen.kong-3" [ref=e226]
+            - cell "역할 직원" [ref=e227]:
+              - text: 역할
+              - generic [ref=e228]: 직원
+            - cell "상태 활성" [ref=e229]:
+              - text: 상태
+              - generic [ref=e230]: 활성
+            - cell "PIN ••••" [ref=e231]:
+              - text: PIN
+              - generic [ref=e232]: ••••
+            - cell "작업 PIN 재발급 수정 비활성화" [ref=e233]:
+              - text: 작업
+              - generic [ref=e234]:
+                - button "PIN 재발급" [ref=e235] [cursor=pointer]
+                - button "수정" [ref=e236] [cursor=pointer]
+                - button "비활성화" [ref=e237] [cursor=pointer]
+          - row "이름 홍길동 아이디 worker.demo 역할 직원 상태 활성 PIN 1952 작업 PIN 재발급 수정 비활성화" [ref=e262]:
+            - cell "이름 홍길동" [ref=e263]:
+              - text: 이름
+              - generic [ref=e264]:
+                - generic [ref=e265]: 홍
+                - generic [ref=e266]: 홍길동
+            - cell "아이디 worker.demo" [ref=e267]
+            - cell "역할 직원" [ref=e268]:
+              - text: 역할
+              - generic [ref=e269]: 직원
+            - cell "상태 활성" [ref=e270]:
+              - text: 상태
+              - generic [ref=e271]: 활성
+            - cell "PIN 1952" [ref=e272]:
+              - text: PIN
+              - generic [ref=e274]: "1952"
+            - cell "작업 PIN 재발급 수정 비활성화" [ref=e275]:
+              - text: 작업
+              - generic [ref=e276]:
+                - button "PIN 재발급" [ref=e277] [cursor=pointer]
+                - button "수정" [ref=e278] [cursor=pointer]
+                - button "비활성화" [ref=e279] [cursor=pointer]

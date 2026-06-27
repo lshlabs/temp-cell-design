@@ -1,0 +1,139 @@
+- generic [ref=e3]:
+  - navigation "메인 내비게이션" [ref=e4]:
+    - button "메뉴 열기" [ref=e5] [cursor=pointer]:
+      - img [ref=e6]
+    - generic [ref=e7]:
+      - button "내 업무" [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+        - emphasis [ref=e12]
+      - button "직원" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+    - button "관리" [ref=e20] [cursor=pointer]:
+      - generic [ref=e21]: 관리
+  - generic [ref=e22]:
+    - banner [ref=e23]:
+      - button "매장 상태 변경" [ref=e26] [cursor=pointer]: 영업중
+      - tablist [ref=e30]:
+        - tab "내 업무" [selected] [ref=e31] [cursor=pointer]
+      - generic [ref=e32]:
+        - button "현재 최신 주문 우선, 클릭하여 과거 주문 우선으로 변경" [ref=e33] [cursor=pointer]:
+          - img [ref=e34]
+        - button "주문 새로고침" [ref=e38] [cursor=pointer]:
+          - img [ref=e39]
+    - region "내 업무" [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - heading "내 업무" [level=2] [ref=e48]
+          - paragraph [ref=e49]: 담당 5개 메뉴 · 진행중 26건
+        - button "메뉴 추가" [ref=e50] [cursor=pointer]:
+          - img [ref=e51]
+          - text: 메뉴 추가
+      - generic [ref=e52]:
+        - button "지연 진행중 12건 짜장면 짜장면 메뉴 옵션" [ref=e53] [cursor=pointer]:
+          - generic "지연" [ref=e54]
+          - generic "진행중 12건" [ref=e55]: "12"
+          - generic [ref=e56]: 짜장면
+          - button "짜장면 메뉴 옵션" [ref=e58]:
+            - img [ref=e59]
+        - button "지연 진행중 10건 짬뽕 짬뽕 메뉴 옵션" [ref=e63] [cursor=pointer]:
+          - generic "지연" [ref=e64]
+          - generic "진행중 10건" [ref=e65]: "10"
+          - generic [ref=e66]: 짬뽕
+          - button "짬뽕 메뉴 옵션" [ref=e68]:
+            - img [ref=e69]
+        - button "지연 진행중 4건 고추짜장 고추짜장 메뉴 옵션" [ref=e73] [cursor=pointer]:
+          - generic "지연" [ref=e74]
+          - generic "진행중 4건" [ref=e75]: "4"
+          - generic [ref=e76]: 고추짜장
+          - button "고추짜장 메뉴 옵션" [ref=e78]:
+            - img [ref=e79]
+        - button "진행중 0건 탕수육 탕수육 메뉴 옵션" [ref=e83] [cursor=pointer]:
+          - generic "진행중 0건" [ref=e84]: "0"
+          - generic [ref=e85]: 탕수육
+          - button "탕수육 메뉴 옵션" [ref=e87]:
+            - img [ref=e88]
+        - button "진행중 0건 고추짬뽕 고추짬뽕 메뉴 옵션" [ref=e92] [cursor=pointer]:
+          - generic "진행중 0건" [ref=e93]: "0"
+          - generic [ref=e94]: 고추짬뽕
+          - button "고추짬뽕 메뉴 옵션" [ref=e96]:
+            - img [ref=e97]
+      - generic [ref=e102]: 주문 내역
+      - table [ref=e104]:
+        - rowgroup [ref=e105]:
+          - row "주문번호 메뉴 수량 주문시각 상태" [ref=e106]:
+            - columnheader "주문번호" [ref=e107]
+            - columnheader "메뉴" [ref=e108]
+            - columnheader "수량" [ref=e109]
+            - columnheader "주문시각" [ref=e110]
+            - columnheader "상태" [ref=e111]
+        - rowgroup [ref=e112]:
+          - row "HP7V12 짜장면 1 6. 27. 오후 07:24 진행중" [ref=e113]:
+            - cell "HP7V12" [ref=e114]
+            - cell "짜장면" [ref=e115]
+            - cell "1" [ref=e116]
+            - cell "6. 27. 오후 07:24" [ref=e117]
+            - cell "진행중" [ref=e118]:
+              - generic [ref=e119]: 진행중
+          - row "HP7V12 짬뽕 1 6. 27. 오후 07:24 진행중" [ref=e120]:
+            - cell "HP7V12" [ref=e121]
+            - cell "짬뽕" [ref=e122]
+            - cell "1" [ref=e123]
+            - cell "6. 27. 오후 07:24" [ref=e124]
+            - cell "진행중" [ref=e125]:
+              - generic [ref=e126]: 진행중
+          - row "HP7V12 고추짜장 1 6. 27. 오후 07:24 진행중" [ref=e127]:
+            - cell "HP7V12" [ref=e128]
+            - cell "고추짜장" [ref=e129]
+            - cell "1" [ref=e130]
+            - cell "6. 27. 오후 07:24" [ref=e131]
+            - cell "진행중" [ref=e132]:
+              - generic [ref=e133]: 진행중
+          - row "IN4XCO 짜장면 11 6. 27. 오후 07:18 지연" [ref=e134]:
+            - cell "IN4XCO" [ref=e135]
+            - cell "짜장면" [ref=e136]
+            - cell "11" [ref=e137]
+            - cell "6. 27. 오후 07:18" [ref=e138]
+            - cell "지연" [ref=e139]:
+              - generic [ref=e140]: 지연
+          - row "IN4XCO 짬뽕 9 6. 27. 오후 07:18 지연" [ref=e141]:
+            - cell "IN4XCO" [ref=e142]
+            - cell "짬뽕" [ref=e143]
+            - cell "9" [ref=e144]
+            - cell "6. 27. 오후 07:18" [ref=e145]
+            - cell "지연" [ref=e146]:
+              - generic [ref=e147]: 지연
+          - row "IN4XCO 고추짜장 3 6. 27. 오후 07:18 지연" [ref=e148]:
+            - cell "IN4XCO" [ref=e149]
+            - cell "고추짜장" [ref=e150]
+            - cell "3" [ref=e151]
+            - cell "6. 27. 오후 07:18" [ref=e152]
+            - cell "지연" [ref=e153]:
+              - generic [ref=e154]: 지연
+          - row "VO0NHF 짜장면 1 6. 27. 오후 06:58 완료" [ref=e155]:
+            - cell "VO0NHF" [ref=e156]
+            - cell "짜장면" [ref=e157]
+            - cell "1" [ref=e158]
+            - cell "6. 27. 오후 06:58" [ref=e159]
+            - cell "완료" [ref=e160]:
+              - generic [ref=e161]: 완료
+          - row "VO0NHF 짬뽕 1 6. 27. 오후 06:58 완료" [ref=e162]:
+            - cell "VO0NHF" [ref=e163]
+            - cell "짬뽕" [ref=e164]
+            - cell "1" [ref=e165]
+            - cell "6. 27. 오후 06:58" [ref=e166]
+            - cell "완료" [ref=e167]:
+              - generic [ref=e168]: 완료
+          - row "YDJG3P 짜장면 1 6. 27. 오후 06:45 완료" [ref=e169]:
+            - cell "YDJG3P" [ref=e170]
+            - cell "짜장면" [ref=e171]
+            - cell "1" [ref=e172]
+            - cell "6. 27. 오후 06:45" [ref=e173]
+            - cell "완료" [ref=e174]:
+              - generic [ref=e175]: 완료
+          - row "J6WOUB 짜장면 1 6. 27. 오후 06:39 완료" [ref=e176]:
+            - cell "J6WOUB" [ref=e177]
+            - cell "짜장면" [ref=e178]
+            - cell "1" [ref=e179]
+            - cell "6. 27. 오후 06:39" [ref=e180]
+            - cell "완료" [ref=e181]:
+              - generic [ref=e182]: 완료
