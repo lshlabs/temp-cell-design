@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MoreVertical, Plus, X } from "lucide-react";
 
 import {
   apiCreateStaff,
@@ -34,6 +34,20 @@ export function StaffPanel({
   const [formError, setFormError] = useState<string | null>(null);
   const [pinVisible, setPinVisible] = useState<number | null>(null);
   const [revealedPin, setRevealedPin] = useState<string | null>(null);
+  const [openActionId, setOpenActionId] = useState<number | null>(null);
+  const actionPopoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (actionPopoverRef.current && !actionPopoverRef.current.contains(e.target as Node)) {
+        setOpenActionId(null);
+      }
+    }
+    if (openActionId !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openActionId]);
 
   function normalizeStaffIdentifier(value: string) {
     return value.trim().toLowerCase();
@@ -207,16 +221,49 @@ export function StaffPanel({
                   </td>
                   <td className="kds-col-actions">
                     <div className="kds-table-actions">
-                      <button className="kds-btn-ghost kds-btn-xs kds-staff-action-pin" disabled={saving} onClick={() => setModal({ type: "pin", member })} type="button">PIN 재발급</button>
-                      <button className="kds-btn-ghost kds-btn-xs" disabled={saving} onClick={() => openEdit(member)} type="button">수정</button>
-                      <button
-                        disabled={saving}
-                        className={`kds-btn-ghost kds-btn-xs${member.active ? " danger" : " green"}`}
-                        onClick={() => setModal({ type: "deactivate", member })}
-                        type="button"
+                      <div
+                        className="kds-staff-action-wrap"
+                        ref={openActionId === member.id ? actionPopoverRef : null}
                       >
-                        {member.active ? "비활성화" : "활성화"}
-                      </button>
+                        <button
+                          className="kds-tile-options-btn"
+                          aria-label={`${member.name} 작업 메뉴`}
+                          title="작업"
+                          type="button"
+                          disabled={saving}
+                          onClick={() => setOpenActionId(openActionId === member.id ? null : member.id)}
+                        >
+                          <MoreVertical size={15} aria-hidden="true" />
+                        </button>
+                        {openActionId === member.id ? (
+                          <div className="kds-staff-action-popover" role="menu">
+                            <button
+                              className="kds-tile-popover-item"
+                              role="menuitem"
+                              type="button"
+                              onClick={() => { setModal({ type: "pin", member }); setOpenActionId(null); }}
+                            >
+                              PIN 재발급
+                            </button>
+                            <button
+                              className="kds-tile-popover-item"
+                              role="menuitem"
+                              type="button"
+                              onClick={() => { openEdit(member); setOpenActionId(null); }}
+                            >
+                              수정
+                            </button>
+                            <button
+                              className={`kds-tile-popover-item${member.active ? " danger" : ""}`}
+                              role="menuitem"
+                              type="button"
+                              onClick={() => { setModal({ type: "deactivate", member }); setOpenActionId(null); }}
+                            >
+                              {member.active ? "비활성화" : "활성화"}
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </td>
                 </tr>

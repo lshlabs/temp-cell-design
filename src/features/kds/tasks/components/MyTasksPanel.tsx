@@ -344,7 +344,11 @@ export function MyTasksPanel({
                   <td className="kds-hcol-menu">
                     <div className="kds-history-menu-cell">
                       <span className="kds-history-menu-name">{row.menuName}</span>
-                      <span className="kds-history-time-inline kds-table-cell-muted">{formatHistoryTime(row.timestamp)}</span>
+                      <span className="kds-history-sub-inline kds-table-cell-muted">
+                        <span className="kds-history-ordernum-inline">{row.orderNumber}</span>
+                        <span className="kds-history-sub-sep kds-history-ordernum-inline" aria-hidden="true">·</span>
+                        <span className="kds-history-time-inline">{formatHistoryTime(row.timestamp)}</span>
+                      </span>
                     </div>
                   </td>
                   <td className="kds-hcol-qty" style={{ textAlign: "center", fontWeight: 700 }}>{row.quantity}</td>
