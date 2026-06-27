@@ -324,14 +324,14 @@ export function MyTasksPanel({
         </p>
       ) : (
         <div className="kds-table-wrap">
-          <table className="kds-table">
+          <table className="kds-table kds-history-table">
             <thead>
               <tr>
-                <th>주문번호</th>
-                <th>메뉴</th>
-                <th style={{ textAlign: "center" }}>수량</th>
-                <th>주문시각</th>
-                <th style={{ textAlign: "center" }}>상태</th>
+                <th className="kds-hcol-ordernum">주문번호</th>
+                <th className="kds-hcol-menu">메뉴</th>
+                <th className="kds-hcol-qty" style={{ textAlign: "center" }}>수량</th>
+                <th className="kds-hcol-time">주문시각</th>
+                <th className="kds-hcol-status" style={{ textAlign: "center" }}>상태</th>
               </tr>
             </thead>
             <tbody>
@@ -340,11 +340,16 @@ export function MyTasksPanel({
                   key={`${row.orderNumber}-${row.itemId}-${idx}`}
                   className={row.status === "완료" ? "row-done" : row.delayed ? "row-delayed" : ""}
                 >
-                  <td className="kds-table-cell-muted">{row.orderNumber}</td>
-                  <td>{row.menuName}</td>
-                  <td style={{ textAlign: "center", fontWeight: 700 }}>{row.quantity}</td>
-                  <td className="kds-table-cell-muted">{formatHistoryTime(row.timestamp)}</td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className="kds-hcol-ordernum kds-table-cell-muted">{row.orderNumber}</td>
+                  <td className="kds-hcol-menu">
+                    <div className="kds-history-menu-cell">
+                      <span className="kds-history-menu-name">{row.menuName}</span>
+                      <span className="kds-history-time-inline kds-table-cell-muted">{formatHistoryTime(row.timestamp)}</span>
+                    </div>
+                  </td>
+                  <td className="kds-hcol-qty" style={{ textAlign: "center", fontWeight: 700 }}>{row.quantity}</td>
+                  <td className="kds-hcol-time kds-table-cell-muted">{formatHistoryTime(row.timestamp)}</td>
+                  <td className="kds-hcol-status" style={{ textAlign: "center" }}>
                     {row.delayed ? (
                       <span className="kds-badge red">지연</span>
                     ) : (

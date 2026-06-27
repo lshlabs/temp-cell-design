@@ -2100,7 +2100,7 @@ button:not(:disabled):hover {
   border-collapse: collapse;
   font-size: 13px;
   width: 100%;
-  table-layout: fixed; 
+  table-layout: auto;
 }
 
 .kds-table th {
@@ -2109,7 +2109,7 @@ button:not(:disabled):hover {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 9px 16px;
+  padding: 9px 14px;
   text-align: left;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2125,7 +2125,7 @@ button:not(:disabled):hover {
 .kds-table td {
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
-  padding: 11px 16px;
+  padding: 11px 14px;
   white-space: nowrap;
 }
 
@@ -2155,9 +2155,56 @@ button:not(:disabled):hover {
   justify-content: flex-end;
 }
 
+/* ── Staff table column widths ── */
+.kds-staff-table .kds-col-name    { width: auto; min-width: 0; }
+.kds-staff-table .kds-col-loginid { width: 130px; }
+.kds-staff-table .kds-col-role    { width: 72px; }
+.kds-staff-table .kds-col-status  { width: 72px; }
+.kds-staff-table .kds-col-pin     { width: 80px; }
+.kds-staff-table .kds-col-actions { width: 168px; }
+
+/* Inline secondary text shown only on mobile */
+.kds-staff-name-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kds-staff-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kds-staff-loginid-inline { display: none; font-size: 11px; }
+
+/* ── History table column widths ── */
+.kds-history-table .kds-hcol-ordernum { width: 90px; }
+.kds-history-table .kds-hcol-menu     { width: auto; min-width: 0; }
+.kds-history-table .kds-hcol-qty      { width: 52px; }
+.kds-history-table .kds-hcol-time     { width: 120px; }
+.kds-history-table .kds-hcol-status   { width: 72px; }
+
+/* Inline time shown only on mobile */
+.kds-history-menu-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kds-history-menu-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kds-history-time-inline { display: none; font-size: 11px; }
+
 /* ═══════════════════════════════════════════════
    Badge — inline status chips
-═══════════════════════════════════════════════ */
+══════════════════════════════════════��════════ */
 .kds-badge {
   border-radius: 999px;
   display: inline-block;
@@ -2733,6 +2780,26 @@ button:not(:disabled):hover {
   .kds-lane-column--wide { flex-basis: 320px; }
   .kds-lane-column--xwide { flex-basis: 384px; }
   .field-row { grid-template-columns: 1fr; }
+
+  /* Staff table — hide loginId column, tighten actions */
+  .kds-staff-table .kds-col-loginid { display: none; }
+  .kds-staff-table .kds-col-actions { width: 140px; }
+  .kds-staff-action-pin { display: none; }
+
+  /* History table — tighten ordernum */
+  .kds-history-table .kds-hcol-ordernum { width: 76px; }
+  .kds-history-table .kds-hcol-time     { width: 106px; }
+}
+
+@media (max-width: 680px) {
+  /* Staff table — further tighten: hide PIN column */
+  .kds-staff-table .kds-col-pin { display: none; }
+  .kds-staff-table .kds-col-actions { width: 108px; }
+
+  /* History table — hide ordernum, show inline time */
+  .kds-history-table .kds-hcol-ordernum { display: none; }
+  .kds-history-table .kds-hcol-time     { display: none; }
+  .kds-history-time-inline              { display: block; }
 }
 
 @media (max-width: 520px) {
@@ -2809,4 +2876,23 @@ button:not(:disabled):hover {
   .kds-metric-strip { flex-wrap: wrap; }
   .kds-metric { flex-basis: 50%; }
   .kds-metric-divider { display: none; }
+
+  /* Staff table — mobile: hide role column, show loginId inline under name */
+  .kds-staff-table .kds-col-role           { display: none; }
+  .kds-staff-table .kds-col-status         { width: 60px; }
+  .kds-staff-table .kds-col-actions        { width: 96px; }
+  .kds-staff-loginid-inline                { display: block; }
+  .kds-table th, .kds-table td             { padding-left: 14px !important; padding-right: 10px !important; }
+  .kds-staff-table .kds-col-actions th,
+  .kds-staff-table .kds-col-actions td     { padding-right: 14px !important; }
+
+  /* History table — mobile: keep menu+qty+status, allow name to wrap */
+  .kds-history-menu-name                   { white-space: normal; word-break: break-word; }
+  .kds-history-table .kds-hcol-qty         { width: 44px; }
+  .kds-history-table .kds-hcol-status      { width: 60px; }
+
+  /* Menu stat name — allow wrapping on small screens */
+  .kds-menu-stat-row {
+    grid-template-columns: 110px 1fr 26px;
+  }
 }
