@@ -131,16 +131,10 @@ export type QnaOption = {
   terminal?: "resolved" | "agent" | "ai";
 };
 
-/**
- * autoTerminal: when true the step has no user-facing choices.
- * The bot message IS the answer; after rendering it, the component
- * immediately shows TerminalChips without waiting for a user chip tap.
- */
 export type QnaStep = {
   id: string;
   question: string;
   options: QnaOption[];
-  autoTerminal?: boolean;
 };
 
 export const QNA_INITIAL_OPTIONS: QnaOption[] = [
@@ -155,7 +149,6 @@ export const QNA_INITIAL_OPTIONS: QnaOption[] = [
 ];
 
 export const QNA_STEPS: Record<string, QnaStep> = {
-  // ── 주문 ──────────────────────────────────────────────────────────────────
   "orders-1": {
     id: "orders-1",
     question: "어떤 상황인가요?",
@@ -167,27 +160,42 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "orders-new": {
     id: "orders-new",
-    question:
-      "아래 항목을 순서대로 확인해 보세요.\n\n1. 매장 상태가 영업중인지 확인하세요.\n2. 화면 상단의 새로고침 버튼을 눌러보세요.\n3. 현재 탭이 '접수' 화면인지 확인하세요.\n4. 설정에서 알림 활성화 여부를 확인하세요.",
-    options: [],
-    autoTerminal: true,
+    question: "아래 항목을 순서대로 확인해 보세요.",
+    options: [
+      {
+        id: "o-new-guide",
+        label: "확인했어요",
+        answer:
+          "1. 매장 상태가 영업중인지 확인하세요.\n2. 화면 상단의 새로고침 버튼을 눌러보세요.\n3. 현재 탭이 '접수' 화면인지 확인하세요.\n4. 설정에서 알림 활성화 여부를 확인하세요.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "orders-done": {
     id: "orders-done",
-    question:
-      "상단 탭에서 '완료' 탭을 선택하면 완료된 주문 목록을 확인할 수 있습니다.",
-    options: [],
-    autoTerminal: true,
+    question: "완료 탭을 확인하면 됩니다.",
+    options: [
+      {
+        id: "o-done-guide",
+        label: "알겠어요",
+        answer: "상단 탭에서 '완료' 탭을 선택하면 완료된 주문 목록을 확인할 수 있습니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "orders-cancel": {
     id: "orders-cancel",
-    question:
-      "취소 주문은 주문 보드에서 제외되며 통계 집계로만 관리됩니다. 취소 주문 상세 내역이 필요하면 상담원 연결이 필요합니다.",
-    options: [],
-    autoTerminal: true,
+    question: "취소 주문은 보드에서 제외됩니다.",
+    options: [
+      {
+        id: "o-cancel-guide",
+        label: "알겠어요",
+        answer:
+          "취소 주문은 주문 보드에서 제외되며 통계 집계로만 관리됩니다. 취소 주문 상세 내역이 필요하면 상담원 연결이 필요합니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
-
-  // ── 알림 ──────────────────────────────────────────────────────────────────
   "alerts-1": {
     id: "alerts-1",
     question: "어떤 문제인가요?",
@@ -199,20 +207,30 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "alerts-sound": {
     id: "alerts-sound",
-    question:
-      "아래 항목을 확인해 보세요.\n\n1. 설정 > 알림 활성화가 켜져 있는지 확인하세요.\n2. 알림 사운드가 '없음'으로 설정되어 있지 않은지 확인하세요.\n3. 기기 음량을 높이고 브라우저 음소거를 해제하세요.\n4. 브라우저 주소 표시줄의 자물쇠 아이콘에서 오디오 권한을 허용하세요.",
-    options: [],
-    autoTerminal: true,
+    question: "아래 항목을 확인해 보세요.",
+    options: [
+      {
+        id: "a-sound-guide",
+        label: "확인했어요",
+        answer:
+          "1. 설정 > 알림 활성화가 켜져 있는지 확인하세요.\n2. 알림 사운드가 '없음'으로 설정되어 있지 않은지 확인하세요.\n3. 기기 음량을 높이고 브라우저 음소거를 해제하세요.\n4. 브라우저 주소 표시줄의 자물쇠 아이콘에서 오디오 권한을 허용하세요.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "alerts-device": {
     id: "alerts-device",
-    question:
-      "브라우저 오디오 권한과 기기 음소거 설정을 해당 기기에서 개별 확인해 주세요. 해결되지 않으면 AI 상담 또는 상담원 연결을 이용하세요.",
-    options: [],
-    autoTerminal: true,
+    question: "기기별 설정 문제일 수 있습니다.",
+    options: [
+      {
+        id: "a-device-guide",
+        label: "확인했어요",
+        answer:
+          "브라우저 오디오 권한과 기기 음소거 설정을 해당 기기에서 개별 확인해 주세요. 해결되지 않으면 AI 상담 또는 상담원 연결을 이용하세요.",
+        nextStepId: "terminal",
+      },
+    ],
   },
-
-  // ── 주문 처리 ──────────────────────────────────────────────────────────────
   "handling-1": {
     id: "handling-1",
     question: "어떤 내용이 궁금한가요?",
@@ -224,27 +242,43 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "handling-complete": {
     id: "handling-complete",
-    question:
-      "모든 메뉴 조리가 완료되면 주문 카드 하단의 '완료' 버튼을 누르세요. 버튼을 누르면 해당 주문이 완료 탭으로 이동합니다.",
-    options: [],
-    autoTerminal: true,
+    question: "주문 완료 방법 안내",
+    options: [
+      {
+        id: "h-complete-guide",
+        label: "알겠어요",
+        answer:
+          "모든 메뉴 조리가 완료되면 주문 카드 하단의 '완료' 버튼을 누르세요. 버튼을 누르면 해당 주문이 완료 탭으로 이동합니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "handling-item": {
     id: "handling-item",
-    question:
-      "메뉴 또는 옵션 항목을 누르면 해당 항목의 완료 상태가 토글됩니다. 개별 항목 완료와 주문 전체 완료는 별개입니다. 모든 항목 체크 후 주문 완료 버튼을 눌러야 주문이 완료됩니다.",
-    options: [],
-    autoTerminal: true,
+    question: "메뉴/옵션 완료 체크 안내",
+    options: [
+      {
+        id: "h-item-guide",
+        label: "알겠어요",
+        answer:
+          "메뉴 또는 옵션 항목을 누르면 해당 항목의 완료 상태가 토글됩니다. 개별 항목 완료와 주문 전체 완료는 별개입니다. 모든 항목 체크 후 주문 완료 버튼을 눌러야 주문이 완료됩니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "handling-allergy": {
     id: "handling-allergy",
-    question:
-      "고객 요청사항 또는 AI 분석에서 알레르기 위험이 감지된 항목에 표시됩니다. 조리 전 반드시 고객 요청사항과 옵션을 확인해 주세요.",
-    options: [],
-    autoTerminal: true,
+    question: "알레르기 아이콘 안내",
+    options: [
+      {
+        id: "h-allergy-guide",
+        label: "알겠어요",
+        answer:
+          "고객 요청사항 또는 AI 분석에서 알레르기 위험이 감지된 항목에 표시됩니다. 조리 전 반드시 고객 요청사항과 옵션을 확인해 주세요.",
+        nextStepId: "terminal",
+      },
+    ],
   },
-
-  // ── 매장 상태 ──────────────────────────────────────────────────────────────
   "status-1": {
     id: "status-1",
     question: "어떤 내용이 궁금한가요?",
@@ -256,27 +290,43 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "status-pause": {
     id: "status-pause",
-    question:
-      "일시중지는 설정한 시간 동안 주문 접수를 임시로 중지합니다. 영업중으로 변경하면 즉시 주문 접수가 재개됩니다. 영업종료는 매장 운영 자체를 종료하는 상태입니다.",
-    options: [],
-    autoTerminal: true,
+    question: "일시중지 안내",
+    options: [
+      {
+        id: "s-pause-guide",
+        label: "알겠어요",
+        answer:
+          "일시중지는 설정한 시간 동안 주문 접수를 임시로 중지합니다. 영업중으로 변경하면 즉시 주문 접수가 재개됩니다. 영업종료는 매장 운영 자체를 종료하는 상태입니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "status-break": {
     id: "status-break",
-    question:
-      "브레이크타임은 설정한 시간대에 자동으로 주문 접수를 중지하는 운영 예약 설정입니다. 일시중지는 지금 즉시 일정 시간 동안 주문을 임시로 중단하는 수동 조치입니다.",
-    options: [],
-    autoTerminal: true,
+    question: "브레이크타임 vs 일시중지 안내",
+    options: [
+      {
+        id: "s-break-guide",
+        label: "알겠어요",
+        answer:
+          "브레이크타임은 설정한 시간대에 자동으로 주문 접수를 중지하는 운영 예약 설정입니다. 일시중지는 지금 즉시 일정 시간 동안 주문을 임시로 중단하는 수동 조치입니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "status-auto": {
     id: "status-auto",
-    question:
-      "자동수락을 켜면 주문 수신 즉시 진행중 상태로 표시됩니다. 자동수락을 끄면 조리 시작 버튼을 직접 눌러야 진행중으로 전환됩니다.",
-    options: [],
-    autoTerminal: true,
+    question: "자동수락 안내",
+    options: [
+      {
+        id: "s-auto-guide",
+        label: "알겠어요",
+        answer:
+          "자동수락을 켜면 주문 수신 즉시 진행중 상태로 표시됩니다. 자동수락을 끄면 조리 시작 버튼을 직접 눌러야 진행중으로 전환됩니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
-
-  // ── 내 업무 ────────────────────────────────────────────────────────────────
   "tasks-1": {
     id: "tasks-1",
     question: "어떤 문제인가요?",
@@ -287,20 +337,30 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "tasks-missing": {
     id: "tasks-missing",
-    question:
-      "내 업무 탭에서 '메뉴 추가' 버튼을 눌러 담당 메뉴를 등록하세요. 주문의 메뉴명과 담당 메뉴명이 정확히 일치해야 집계됩니다.",
-    options: [],
-    autoTerminal: true,
+    question: "담당 메뉴 등록을 확인하세요.",
+    options: [
+      {
+        id: "t-missing-guide",
+        label: "확인했어요",
+        answer:
+          "내 업무 탭에서 '메뉴 추가' 버튼을 눌러 담당 메뉴를 등록하세요. 주문의 메뉴명과 담당 메뉴명이 정확히 일치해야 집계됩니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "tasks-count": {
     id: "tasks-count",
-    question:
-      "진행 수량은 현재 접수된 주문 중 담당 메뉴가 포함된 항목의 합계입니다. 완료된 항목은 집계에서 제외됩니다.",
-    options: [],
-    autoTerminal: true,
+    question: "진행 수량 안내",
+    options: [
+      {
+        id: "t-count-guide",
+        label: "알겠어요",
+        answer:
+          "진행 수량은 현재 접수된 주문 중 담당 메뉴가 포함된 항목의 합계입니다. 완료된 항목은 집계에서 제외됩니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
-
-  // ── 직원/PIN ───────────────────────────────────────────────────────────────
   "staff-1": {
     id: "staff-1",
     question: "어떤 문제인가요?",
@@ -312,14 +372,20 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "staff-login": {
     id: "staff-login",
-    question:
-      "직원 계정 활성화 상태를 직원 관리 화면에서 확인하세요. 비활성화 상태면 활성화로 전환하세요. 비밀번호 또는 PIN 문제라면 매니저가 재발급할 수 있습니다.",
-    options: [],
-    autoTerminal: true,
+    question: "직원 로그인 문제 안내",
+    options: [
+      {
+        id: "st-login-guide",
+        label: "확인했어요",
+        answer:
+          "직원 계정 활성화 상태를 직원 관리 화면에서 확인하세요. 비활성화 상태면 활성화로 전환하세요. 비밀번호 또는 PIN 문제라면 매니저가 재발급할 수 있습니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "staff-pin": {
     id: "staff-pin",
-    question: "PIN 재발급은 매니저 계정에서 가능합니다. 어떤 상황인가요?",
+    question: "PIN 재발급은 매니저 계정에서 가능합니다.",
     options: [
       {
         id: "st-pin-manager",
@@ -333,13 +399,17 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "staff-deactivate": {
     id: "staff-deactivate",
-    question:
-      "직원 관리 화면에서 해당 직원 항목의 활성/비활성 토글을 사용하세요. 비활성화된 직원은 더 이상 로그인할 수 없습니다.",
-    options: [],
-    autoTerminal: true,
+    question: "직원 비활성화 안내",
+    options: [
+      {
+        id: "st-deact-guide",
+        label: "알겠어요",
+        answer:
+          "직원 관리 화면에서 해당 직원 항목의 활성/비활성 토글을 사용하세요. 비활성화된 직원은 더 이상 로그인할 수 없습니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
-
-  // ── 계정/설정 ──────────────────────────────────────────────────────────────
   "account-1": {
     id: "account-1",
     question: "어떤 문제인가요?",
@@ -351,23 +421,37 @@ export const QNA_STEPS: Record<string, QnaStep> = {
   },
   "account-pw": {
     id: "account-pw",
-    question:
-      "보안상 비밀번호 변경 후 기존 세션이 자동으로 종료됩니다. 새 비밀번호로 다시 로그인하면 정상적으로 이용할 수 있습니다.",
-    options: [],
-    autoTerminal: true,
+    question: "비밀번호 변경 후 로그아웃",
+    options: [
+      {
+        id: "ac-pw-guide",
+        label: "알겠어요",
+        answer:
+          "보안상 비밀번호 변경 후 기존 세션이 자동으로 종료됩니다. 새 비밀번호로 다시 로그인하면 정상적으로 이용할 수 있습니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
   "account-reauth": {
     id: "account-reauth",
-    question:
-      "세션 만료 또는 보안 정책에 따라 재인증이 요청될 수 있습니다. 로그인 정보를 다시 입력하시면 됩니다. 반복적으로 발생하면 상담원 연결을 통해 확인해 드립니다.",
-    options: [],
-    autoTerminal: true,
+    question: "재인증 요청 안내",
+    options: [
+      {
+        id: "ac-reauth-guide",
+        label: "알겠어요",
+        answer:
+          "세션 만료 또는 보안 정책에 따라 재인증이 요청될 수 있습니다. 로그인 정보를 다시 입력하시면 됩니다. 반복적으로 발생하면 상담원 연결을 통해 확인해 드립니다.",
+        nextStepId: "terminal",
+      },
+    ],
   },
-
-  // ── Terminal (해결 여부 확인) ───────────────────────────────────────────────
   "terminal": {
     id: "terminal",
     question: "문제가 해결되었나요?",
-    options: [],
+    options: [
+      { id: "end-resolved", label: "해결됐어요", terminal: "resolved" },
+      { id: "end-ai", label: "AI에게 이어서 질문", terminal: "ai" },
+      { id: "end-agent", label: "상담원 연결", terminal: "agent" },
+    ],
   },
 };
