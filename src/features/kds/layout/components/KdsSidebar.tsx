@@ -1,4 +1,4 @@
-import { ClipboardList, Menu, Users, X } from "lucide-react";
+import { ClipboardList, HelpCircle, Menu, Users, X } from "lucide-react";
 
 import type { AuthSession } from "../../../../types";
 import type { BoardTab } from "../../../../types/kds";
@@ -73,6 +73,19 @@ export function KdsSidebar({
             {open ? <span>직원</span> : null}
           </button>
         ) : null}
+
+        <button
+          className={`kds-sidebar-item${activeTab === "SUPPORT" ? " active" : ""}`}
+          onClick={() => {
+            onTabChange("SUPPORT");
+            onOpenChange(false);
+          }}
+          type="button"
+          title="고객지원"
+        >
+          <HelpCircle size={16} aria-hidden="true" />
+          {open ? <span>고객지원</span> : null}
+        </button>
       </div>
 
       <KdsAccountMenu

@@ -6,7 +6,8 @@ export type BoardTab =
   | "MY_TASKS"
   | "STATS"
   | "SETTINGS"
-  | "STAFF";
+  | "STAFF"
+  | "SUPPORT";
 
 export type StoreStatus = "OPEN" | "PAUSED" | "CLOSED";
 
