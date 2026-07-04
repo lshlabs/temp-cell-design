@@ -190,6 +190,13 @@ export function ChatbotFab() {
 
   const { isOpen, isMinimized, status, selectedPath, currentStepId, unreadCount } = session;
 
+  // Remove the current sessionId from the guard Set before starting a new session
+  // so the new session's fresh ID can be initialized cleanly.
+  function handleStartNewSession() {
+    _initializedSessions.delete(session.sessionId);
+    startNewSession();
+  }
+
   // ── Smart scroll: only auto-scroll when user is at/near the bottom ─────────
   useEffect(() => {
     if (!isOpen || isMinimized) return;
@@ -255,12 +262,6 @@ export function ChatbotFab() {
     });
     setCurrentStep("initial");
     setActiveChoicesMsgId(greetMsg.id);
-
-    // Cleanup: when the session ID changes (new session started), remove the old
-    // sessionId from the Set so memory doesn't grow unboundedly.
-    return () => {
-      _initializedSessions.delete(session.sessionId);
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.sessionId]);
 
@@ -733,7 +734,7 @@ export function ChatbotFab() {
                   <p>상담이 종료되었습니다.</p>
                   <button
                     className="chatbot-new-session-btn"
-                    onClick={startNewSession}
+                    onClick={handleStartNewSession}
                     type="button"
                   >
                     <RefreshCcw size={12} aria-hidden="true" />
