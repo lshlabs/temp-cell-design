@@ -14,6 +14,7 @@ import { StaffPanel } from "../features/kds/staff/components/StaffPanel";
 import { StatsPanel } from "../features/kds/stats/components/StatsPanel";
 import { MyTasksPanel } from "../features/kds/tasks/components/MyTasksPanel";
 import { SupportPanel } from "../features/kds/support/components/SupportPanel";
+import { ChatbotFab } from "../features/kds/support/components/ChatbotFab";
 import { useAssignedMenus } from "../features/kds/tasks/hooks/useAssignedMenus";
 import { useKdsClock } from "../shared/hooks/useKdsClock";
 import { useKdsOrders } from "../features/kds/orders/hooks/useKdsOrders";
@@ -309,6 +310,9 @@ export function KdsPage({ session, onLogout, onUnauthorized }: KdsPageProps) {
       />
 
       <KdsToast toast={toast} onClose={hideToast} />
+
+      {/* Global chatbot FAB — persists across all tabs */}
+      <ChatbotFab />
     </div>
   );
 }

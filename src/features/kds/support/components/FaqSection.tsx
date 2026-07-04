@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ChevronDown, Star } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronDown, MessageCircle, Search, Star, X } from "lucide-react";
 
 import {
   FAQ_CATEGORIES,
@@ -9,61 +9,142 @@ import {
 } from "../data/supportData";
 
 type FaqSectionProps = {
-  onAskAI: (context: string) => void;
+  onOpenChatbot: (context?: string) => void;
 };
 
-export function FaqSection({ onAskAI }: FaqSectionProps) {
+function highlight(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase() ? (
+      <mark key={i} className="support-faq-highlight">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+}
+
+export function FaqSection({ onOpenChatbot }: FaqSectionProps) {
   const [activeCategory, setActiveCategory] = useState<FaqCategory | "인기">("인기");
   const [openItemId, setOpenItemId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const displayedItems: FaqItem[] =
-    activeCategory === "인기"
+  const isSearching = searchQuery.trim().length > 0;
+
+  const displayedItems: FaqItem[] = useMemo(() => {
+    if (isSearching) {
+      const q = searchQuery.trim().toLowerCase();
+      return FAQ_ITEMS.filter(
+        (f) =>
+          f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q)
+      );
+    }
+    return activeCategory === "인기"
       ? FAQ_ITEMS.filter((f) => f.popular)
       : FAQ_ITEMS.filter((f) => f.category === activeCategory);
+  }, [searchQuery, activeCategory, isSearching]);
 
   function toggleItem(id: string) {
     setOpenItemId((prev) => (prev === id ? null : id));
   }
 
+  function clearSearch() {
+    setSearchQuery("");
+    setOpenItemId(null);
+  }
+
   return (
     <div className="support-faq">
-      {/* Category tabs */}
-      <div className="support-faq-tabs" role="tablist" aria-label="FAQ 카테고리">
-        <button
-          role="tab"
-          aria-selected={activeCategory === "인기"}
-          className={`support-faq-tab${activeCategory === "인기" ? " active" : ""}`}
-          onClick={() => {
-            setActiveCategory("인기");
-            setOpenItemId(null);
-          }}
-          type="button"
-        >
-          <Star size={12} aria-hidden="true" />
-          인기
-        </button>
-        {FAQ_CATEGORIES.map((cat) => (
+      {/* Search bar */}
+      <div className="support-faq-search-wrap">
+        <div className="support-faq-search-field">
+          <Search size={15} className="support-faq-search-icon" aria-hidden="true" />
+          <input
+            aria-label="FAQ 검색"
+            className="support-faq-search-input"
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setOpenItemId(null);
+            }}
+            placeholder="질문이나 키워드를 검색하세요..."
+            type="search"
+            value={searchQuery}
+          />
+          {isSearching ? (
+            <button
+              aria-label="검색 지우기"
+              className="support-faq-search-clear"
+              onClick={clearSearch}
+              type="button"
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Category tabs — hidden while searching */}
+      {!isSearching ? (
+        <div className="support-faq-tabs" role="tablist" aria-label="FAQ 카테고리">
           <button
-            key={cat}
             role="tab"
-            aria-selected={activeCategory === cat}
-            className={`support-faq-tab${activeCategory === cat ? " active" : ""}`}
+            aria-selected={activeCategory === "인기"}
+            className={`support-faq-tab${activeCategory === "인기" ? " active" : ""}`}
             onClick={() => {
-              setActiveCategory(cat);
+              setActiveCategory("인기");
               setOpenItemId(null);
             }}
             type="button"
           >
-            {cat}
+            <Star size={11} aria-hidden="true" />
+            인기
           </button>
-        ))}
-      </div>
+          {FAQ_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              role="tab"
+              aria-selected={activeCategory === cat}
+              className={`support-faq-tab${activeCategory === cat ? " active" : ""}`}
+              onClick={() => {
+                setActiveCategory(cat);
+                setOpenItemId(null);
+              }}
+              type="button"
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-      {/* FAQ list */}
-      <div className="support-faq-list" role="tabpanel">
+      {/* FAQ list / search results */}
+      <div className="support-faq-list" role={isSearching ? undefined : "tabpanel"}>
+        {isSearching ? (
+          <p className="support-faq-results-label">
+            {displayedItems.length > 0
+              ? `"${searchQuery}" 검색 결과 ${displayedItems.length}건`
+              : null}
+          </p>
+        ) : null}
+
         {displayedItems.length === 0 ? (
-          <div className="support-empty">
-            <p>해당 카테고리에 FAQ가 없습니다.</p>
+          <div className="support-faq-empty">
+            <Search size={28} aria-hidden="true" className="support-faq-empty-icon" />
+            <p className="support-faq-empty-title">검색 결과가 없습니다</p>
+            <p className="support-faq-empty-desc">
+              다른 키워드로 검색해 보거나 챗봇 상담을 이용해 주세요.
+            </p>
+            <button
+              className="support-faq-chatbot-btn"
+              onClick={() => onOpenChatbot(searchQuery ? `검색어: ${searchQuery}` : undefined)}
+              type="button"
+            >
+              <MessageCircle size={14} aria-hidden="true" />
+              챗봇으로 문의하기
+            </button>
           </div>
         ) : (
           displayedItems.map((item) => (
@@ -77,7 +158,11 @@ export function FaqSection({ onAskAI }: FaqSectionProps) {
                 onClick={() => toggleItem(item.id)}
                 type="button"
               >
-                <span>{item.question}</span>
+                <span>
+                  {isSearching
+                    ? highlight(item.question, searchQuery)
+                    : item.question}
+                </span>
                 <ChevronDown
                   size={15}
                   aria-hidden="true"
@@ -86,13 +171,20 @@ export function FaqSection({ onAskAI }: FaqSectionProps) {
               </button>
               {openItemId === item.id ? (
                 <div className="support-faq-answer" role="region">
-                  <p>{item.answer}</p>
+                  <p>
+                    {isSearching
+                      ? highlight(item.answer, searchQuery)
+                      : item.answer}
+                  </p>
                   <button
-                    className="support-faq-ask-ai btn-outline kds-btn-sm"
-                    onClick={() => onAskAI(`FAQ: ${item.question}\n${item.answer}`)}
+                    className="support-faq-ask-ai"
+                    onClick={() =>
+                      onOpenChatbot(`FAQ: ${item.question}\n${item.answer}`)
+                    }
                     type="button"
                   >
-                    AI에게 추가 질문
+                    <MessageCircle size={13} aria-hidden="true" />
+                    챗봇으로 추가 문의
                   </button>
                 </div>
               ) : null}
@@ -100,6 +192,21 @@ export function FaqSection({ onAskAI }: FaqSectionProps) {
           ))
         )}
       </div>
+
+      {/* Bottom chatbot CTA — only when not searching */}
+      {!isSearching ? (
+        <div className="support-faq-footer">
+          <p>원하는 답변을 찾지 못했나요?</p>
+          <button
+            className="support-faq-chatbot-btn"
+            onClick={() => onOpenChatbot()}
+            type="button"
+          >
+            <MessageCircle size={14} aria-hidden="true" />
+            챗봇으로 문의하기
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
