@@ -66,6 +66,13 @@ const SIMULATED_AI: string[] = [
   "이 문제는 상담원 연결이 필요한 경우일 수 있습니다. 상담원 연결을 원하시면 아래 버튼을 눌러주세요.",
 ];
 let _aiIdx = 0;
+
+// Module-level Set tracks which sessionIds have already received their welcome message.
+// Using a module-level (not component-level) guard is the only reliable way to prevent
+// duplicates across React Strict Mode's double effect invocation, panel close/re-open,
+// and component remounts — all of which reset any useRef value.
+const _initializedSessions = new Set<string>();
+
 function nextAiReply(): string {
   const r = SIMULATED_AI[_aiIdx % SIMULATED_AI.length];
   _aiIdx += 1;
@@ -180,8 +187,6 @@ export function ChatbotFab() {
   const agentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track whether the user has scrolled up away from the bottom
   const userScrolledUpRef = useRef(false);
-  // Guard: prevent duplicate welcome message across StrictMode double-effects / re-opens
-  const initDoneRef = useRef(false);
 
   const { isOpen, isMinimized, status, selectedPath, currentStepId, unreadCount } = session;
 
@@ -212,16 +217,18 @@ export function ChatbotFab() {
   }, [isOpen, isMinimized, markRead]);
 
   // ── Init: show greeting + first choices when session starts fresh ──────────
-  // Runs on mount AND whenever the session ID changes (i.e. startNewSession was called).
+  // Uses a module-level Set keyed by sessionId so Strict Mode's double-invoke
+  // of effects cannot produce a duplicate welcome message.
   useEffect(() => {
-    // Reset guard whenever session ID changes
-    initDoneRef.current = false;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.sessionId]);
-
-  useEffect(() => {
-    if (initDoneRef.current) return;
-    initDoneRef.current = true;
+    if (_initializedSessions.has(session.sessionId)) {
+      // Session already initialized — just restore the active chip pointer
+      if (messages.length > 0 && currentStepId) {
+        const lastBotMsg = [...messages].reverse().find((m) => m.role === "bot");
+        if (lastBotMsg) setActiveChoicesMsgId(lastBotMsg.id);
+      }
+      return;
+    }
+    _initializedSessions.add(session.sessionId);
 
     if (status !== "BOT") return;
 
@@ -234,7 +241,7 @@ export function ChatbotFab() {
       return;
     }
 
-    // Fresh session — show welcome message + initial choices immediately
+    // Fresh session — show welcome message + initial choices
     const faqContext =
       selectedPath.length === 1 && selectedPath[0].stepId === "faq"
         ? selectedPath[0].selectedOptionLabel
@@ -248,6 +255,12 @@ export function ChatbotFab() {
     });
     setCurrentStep("initial");
     setActiveChoicesMsgId(greetMsg.id);
+
+    // Cleanup: when the session ID changes (new session started), remove the old
+    // sessionId from the Set so memory doesn't grow unboundedly.
+    return () => {
+      _initializedSessions.delete(session.sessionId);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.sessionId]);
 
