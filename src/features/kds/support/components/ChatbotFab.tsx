@@ -468,15 +468,12 @@ export function ChatbotFab() {
   const showAgentBtn = status === "AI";
   const showEndBtn = status === "AI" || status === "AGENT";
 
-  // ── FAB label ──────────────────────────────────────────────────────────────
-  const fabLabel = isOpen && !isMinimized ? "챗봇 최소화" : "챗봇 상담 열기";
-
   return (
     <>
-      {/* Floating panel */}
-      {isOpen ? (
+      {/* Floating panel — hidden entirely when minimized (minimized = FAB only visible) */}
+      {isOpen && !isMinimized ? (
         <div
-          className={`chatbot-panel${isMinimized ? " chatbot-panel--minimized" : ""}`}
+          className="chatbot-panel"
           role="dialog"
           aria-label="챗봇 상담"
           aria-modal="false"
@@ -534,31 +531,18 @@ export function ChatbotFab() {
                   <X size={14} aria-hidden="true" />
                 </button>
               ) : null}
-              <button
-                className="chatbot-header-icon-btn"
-                onClick={minimize}
-                type="button"
-                title={isMinimized ? "펼치기" : "최소화"}
-                aria-label={isMinimized ? "펼치기" : "최소화"}
-              >
-                <Minus size={14} aria-hidden="true" />
-              </button>
-              <button
-                className="chatbot-header-icon-btn"
-                onClick={close}
-                type="button"
-                title="닫기"
-                aria-label="닫기"
-              >
-                <X size={14} aria-hidden="true" />
-              </button>
+              {/*
+               * 최소화 버튼, 닫기 버튼 제거.
+               * - 최소화: 외부 클릭 또는 FAB 버튼 클릭으로만 동작.
+               * - 닫기(패널 숨김): 추후 세션 만료 등의 이벤트에서 close()를 호출해 구현 예정.
+               *   현재는 미구현 상태이며 FAB를 통한 재오픈으로 대체.
+               */}
             </div>
           </div>
 
-          {/* Body — hidden when minimized */}
-          {!isMinimized ? (
-            <>
-              {/* Messages */}
+          {/* Body */}
+          <>
+            {/* Messages */}
               <div
                 className="chatbot-messages"
                 ref={messagesRef}
@@ -742,23 +726,18 @@ export function ChatbotFab() {
                   </button>
                 </div>
               ) : null}
-            </>
-          ) : null}
+          </>
         </div>
       ) : null}
 
-      {/* FAB */}
+      {/* FAB — always visible; toggles between open and minimized */}
       <button
-        aria-label={fabLabel}
+        aria-label={isOpen && !isMinimized ? "챗봇 최소화" : "챗봇 상담 열기"}
         className={`chatbot-fab${isOpen && !isMinimized ? " chatbot-fab--open" : ""}`}
-        onClick={() => (isOpen ? minimize() : open())}
+        onClick={() => (isOpen && !isMinimized ? minimize() : open())}
         type="button"
       >
-        {isOpen && !isMinimized ? (
-          <Minus size={22} aria-hidden="true" />
-        ) : (
-          <MessageCircle size={22} aria-hidden="true" />
-        )}
+        <MessageCircle size={22} aria-hidden="true" />
         {unreadCount > 0 && (!isOpen || isMinimized) ? (
           <span className="chatbot-fab-badge" aria-label={`읽지 않은 메시지 ${unreadCount}개`}>
             {unreadCount > 9 ? "9+" : unreadCount}
