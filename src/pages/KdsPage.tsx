@@ -13,6 +13,7 @@ import { SettingsPanel } from "../features/kds/settings/components/SettingsPanel
 import { StaffPanel } from "../features/kds/staff/components/StaffPanel";
 import { StatsPanel } from "../features/kds/stats/components/StatsPanel";
 import { MyTasksPanel } from "../features/kds/tasks/components/MyTasksPanel";
+import { SupportPanel } from "../features/kds/support/components/SupportPanel";
 import { useAssignedMenus } from "../features/kds/tasks/hooks/useAssignedMenus";
 import { useKdsClock } from "../shared/hooks/useKdsClock";
 import { useKdsOrders } from "../features/kds/orders/hooks/useKdsOrders";
@@ -140,7 +141,7 @@ export function KdsPage({ session, onLogout, onUnauthorized }: KdsPageProps) {
 
   function handleTopbarTabChange(tab: BoardTab) {
     setActiveTab(tab);
-    if (tab === "MY_TASKS" || tab === "STAFF" || tab === "STATS" || tab === "SETTINGS" || tab === "RECEIVED") {
+    if (tab === "MY_TASKS" || tab === "STAFF" || tab === "STATS" || tab === "SETTINGS" || tab === "RECEIVED" || tab === "SUPPORT") {
       setSidebarOpen(false);
     }
   }
@@ -250,6 +251,10 @@ export function KdsPage({ session, onLogout, onUnauthorized }: KdsPageProps) {
               onChangePasswordClick={openChangePasswordModal}
               disabled={settingsDisabled}
             />
+          </div>
+        ) : activeTab === "SUPPORT" ? (
+          <div className="kds-panel-shell">
+            <SupportPanel />
           </div>
         ) : (
           <OrderBoard

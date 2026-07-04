@@ -81,7 +81,13 @@ export function KdsTopbar({
         </div>
       ) : (
         <div className="kds-topbar-page-title">
-          {activeTab === "STAFF" ? "직원 관리" : activeTab === "STATS" ? "통계" : "설정"}
+          {activeTab === "STAFF"
+            ? "직원 관리"
+            : activeTab === "STATS"
+            ? "통계"
+            : activeTab === "SUPPORT"
+            ? "고객지원"
+            : "설정"}
         </div>
       )}
 
