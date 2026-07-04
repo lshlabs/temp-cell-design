@@ -120,21 +120,25 @@ function UserChoiceChips({ stepId, onChoose }: UserChoiceChipsProps) {
 
 type TerminalChipsProps = {
   onResolved: () => void;
+  onUnresolved: () => void;
   onAI: () => void;
   onAgent: () => void;
   onRestart: () => void;
 };
 
-function TerminalChips({ onResolved, onAI, onAgent, onRestart }: TerminalChipsProps) {
+function TerminalChips({ onResolved, onUnresolved, onAI, onAgent, onRestart }: TerminalChipsProps) {
   return (
     <div className="chatbot-user-chips">
       <button className="chatbot-user-chip chatbot-user-chip--green" type="button" onClick={onResolved}>
         <CheckCircle size={12} aria-hidden="true" />
         해결됐어요
       </button>
+      <button className="chatbot-user-chip" type="button" onClick={onUnresolved}>
+        아직 해결되지 않았어요
+      </button>
       <button className="chatbot-user-chip chatbot-user-chip--blue" type="button" onClick={onAI}>
         <Bot size={12} aria-hidden="true" />
-        AI에게 이어서 질문
+        AI에게 질문
       </button>
       <button className="chatbot-user-chip" type="button" onClick={onAgent}>
         <Headphones size={12} aria-hidden="true" />
@@ -176,6 +180,8 @@ export function ChatbotFab() {
   const agentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track whether the user has scrolled up away from the bottom
   const userScrolledUpRef = useRef(false);
+  // Guard: prevent duplicate welcome message across StrictMode double-effects / re-opens
+  const initDoneRef = useRef(false);
 
   const { isOpen, isMinimized, status, selectedPath, currentStepId, unreadCount } = session;
 
@@ -206,24 +212,44 @@ export function ChatbotFab() {
   }, [isOpen, isMinimized, markRead]);
 
   // ── Init: show greeting + first choices when session starts fresh ──────────
+  // Runs on mount AND whenever the session ID changes (i.e. startNewSession was called).
   useEffect(() => {
-    if (status === "BOT" && messages.length === 0) {
-      const faqContext =
-        selectedPath.length === 1 && selectedPath[0].stepId === "faq"
-          ? selectedPath[0].selectedOptionLabel
-          : null;
-
-      const greetMsg = addMessage({
-        role: "bot",
-        content: faqContext
-          ? `안녕하세요. FAQ에서 이어진 문의를 확인했습니다.\n"${faqContext}"\n\n아래에서 관련 문제 유형을 선택해 주세요.`
-          : "안녕하세요. DeepOrder KDS 고객지원입니다.\n아래에서 문제 유형을 선택해 주세요.",
-      });
-      setCurrentStep("initial");
-      setActiveChoicesMsgId(greetMsg.id);
-    }
+    // Reset guard whenever session ID changes
+    initDoneRef.current = false;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session.sessionId]);
+
+  useEffect(() => {
+    if (initDoneRef.current) return;
+    initDoneRef.current = true;
+
+    if (status !== "BOT") return;
+
+    if (messages.length > 0) {
+      // Session already has messages (restored from storage) — restore active chips
+      if (currentStepId) {
+        const lastBotMsg = [...messages].reverse().find((m) => m.role === "bot");
+        if (lastBotMsg) setActiveChoicesMsgId(lastBotMsg.id);
+      }
+      return;
+    }
+
+    // Fresh session — show welcome message + initial choices immediately
+    const faqContext =
+      selectedPath.length === 1 && selectedPath[0].stepId === "faq"
+        ? selectedPath[0].selectedOptionLabel
+        : null;
+
+    const greetMsg = addMessage({
+      role: "bot",
+      content: faqContext
+        ? `안녕하세요. FAQ에서 이어진 문의를 확인했습니다.\n"${faqContext}"\n\n아래에서 관련 문제 유형을 선택해 주세요.`
+        : "안녕하세요. DeepOrder KDS 고객지원입니다.\n아래에서 문제 유형을 선택해 주세요.",
+    });
+    setCurrentStep("initial");
+    setActiveChoicesMsgId(greetMsg.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.sessionId]);
 
   // ── Simulate agent connecting after WAITING_AGENT ─────────────────────────
   useEffect(() => {
@@ -304,18 +330,30 @@ export function ChatbotFab() {
     if (nextStepId && QNA_STEPS[nextStepId]) {
       const nextStep = QNA_STEPS[nextStepId];
       const botMsg = addMessage({ role: "bot", content: nextStep.question });
-      setCurrentStep(nextStepId);
-      setActiveChoicesMsgId(botMsg.id);
+
+      if (nextStep.autoTerminal) {
+        // Deliver answer directly — skip confirm chip, go straight to terminal
+        const terminalMsg = addMessage({ role: "bot", content: "문제가 해결되었나요?" });
+        setCurrentStep("terminal");
+        setActiveChoicesMsgId(terminalMsg.id);
+      } else {
+        setCurrentStep(nextStepId);
+        setActiveChoicesMsgId(botMsg.id);
+      }
     }
   }
 
   // ── Terminal choice handler ────────────────────────────────────────────────
-  function handleTerminalChoice(choice: "resolved" | "ai" | "agent" | "restart") {
+  function handleTerminalChoice(choice: "resolved" | "unresolved" | "ai" | "agent" | "restart") {
     setActiveChoicesMsgId(null);
     userScrolledUpRef.current = false;
     if (choice === "resolved") {
       addMessage({ role: "system", content: "문제가 해결되었습니다. 도움이 되었으면 좋겠습니다." });
       endSession();
+      return;
+    }
+    if (choice === "unresolved") {
+      transitionToAgent(selectedPath);
       return;
     }
     if (choice === "ai") transitionToAI(selectedPath);
@@ -546,30 +584,38 @@ export function ChatbotFab() {
                   if (msg.role === "bot") {
                     const isActive = msg.id === activeChoicesMsgId;
                     return (
-                      <div key={msg.id} className="chatbot-msg chatbot-msg--bot">
-                        <div className="chatbot-msg-avatar chatbot-msg-avatar--bot" aria-hidden="true">
-                          <MessageCircle size={12} />
-                        </div>
-                        <div className="chatbot-msg-body">
-                          <div className="chatbot-bubble chatbot-bubble--bot">
-                            {msg.content.split("\n").map((line, i) => (
-                              <p key={i}>{line || "\u00A0"}</p>
-                            ))}
+                      <div key={msg.id} className="chatbot-msg-group">
+                        {/* Bot bubble row */}
+                        <div className="chatbot-msg chatbot-msg--bot">
+                          <div className="chatbot-msg-avatar chatbot-msg-avatar--bot" aria-hidden="true">
+                            <MessageCircle size={12} />
                           </div>
-                          <time className="chatbot-msg-time">{formatTime(msg.timestamp)}</time>
-                          {/* Choices rendered as user-side chips below the bot message */}
-                          {isActive && currentStepId && currentStepId !== "terminal" ? (
+                          <div className="chatbot-msg-body">
+                            <div className="chatbot-bubble chatbot-bubble--bot">
+                              {msg.content.split("\n").map((line, i) => (
+                                <p key={i}>{line || "\u00A0"}</p>
+                              ))}
+                            </div>
+                            <time className="chatbot-msg-time">{formatTime(msg.timestamp)}</time>
+                          </div>
+                        </div>
+                        {/* Chips row — right-aligned, outside the bot bubble */}
+                        {isActive && currentStepId && currentStepId !== "terminal" ? (
+                          <div className="chatbot-choice-row">
                             <UserChoiceChips stepId={currentStepId} onChoose={handleBotChoice} />
-                          ) : null}
-                          {isActive && currentStepId === "terminal" ? (
+                          </div>
+                        ) : null}
+                        {isActive && currentStepId === "terminal" ? (
+                          <div className="chatbot-choice-row">
                             <TerminalChips
                               onResolved={() => handleTerminalChoice("resolved")}
+                              onUnresolved={() => handleTerminalChoice("unresolved")}
                               onAI={() => handleTerminalChoice("ai")}
                               onAgent={() => handleTerminalChoice("agent")}
                               onRestart={() => handleTerminalChoice("restart")}
                             />
-                          ) : null}
-                        </div>
+                          </div>
+                        ) : null}
                       </div>
                     );
                   }

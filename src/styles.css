@@ -2157,7 +2157,7 @@ button:not(:disabled):hover {
 
 /* ═══════════════════════════════════════════════
    Badge — inline status chips
-═════════════════════════════════════════�����═════ */
+══════════════════════════════════════��══�����═════ */
 .kds-badge {
   border-radius: 999px;
   display: inline-block;
@@ -3514,15 +3514,29 @@ button:not(:disabled):hover {
 
 .chatbot-msg-time--user { text-align: right; }
 
-/* ── User choice chips (right-aligned, rendered under bot message) ── */
-.chatbot-user-chips {
-  align-items: flex-end;
-  align-self: flex-end;
+/* ── chatbot-msg-group: wraps one bot bubble row + its sibling chip row ── */
+.chatbot-msg-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 6px;
+  gap: 6px;
   width: 100%;
+}
+
+/* ── chatbot-choice-row: full-width right-aligned wrapper for chip sets ── */
+.chatbot-choice-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+/* ── User choice chips (flex-wrap, right-aligned) ── */
+.chatbot-user-chips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  max-width: 90%;
 }
 
 .chatbot-user-chip {
