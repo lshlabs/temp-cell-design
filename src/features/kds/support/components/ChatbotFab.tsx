@@ -66,6 +66,13 @@ const SIMULATED_AI: string[] = [
   "이 문제는 상담원 연결이 필요한 경우일 수 있습니다. 상담원 연결을 원하시면 아래 버튼을 눌러주세요.",
 ];
 let _aiIdx = 0;
+
+// Module-level Set tracks which sessionIds have already received their welcome message.
+// Using a module-level (not component-level) guard is the only reliable way to prevent
+// duplicates across React Strict Mode's double effect invocation, panel close/re-open,
+// and component remounts — all of which reset any useRef value.
+const _initializedSessions = new Set<string>();
+
 function nextAiReply(): string {
   const r = SIMULATED_AI[_aiIdx % SIMULATED_AI.length];
   _aiIdx += 1;
@@ -120,21 +127,25 @@ function UserChoiceChips({ stepId, onChoose }: UserChoiceChipsProps) {
 
 type TerminalChipsProps = {
   onResolved: () => void;
+  onUnresolved: () => void;
   onAI: () => void;
   onAgent: () => void;
   onRestart: () => void;
 };
 
-function TerminalChips({ onResolved, onAI, onAgent, onRestart }: TerminalChipsProps) {
+function TerminalChips({ onResolved, onUnresolved, onAI, onAgent, onRestart }: TerminalChipsProps) {
   return (
     <div className="chatbot-user-chips">
       <button className="chatbot-user-chip chatbot-user-chip--green" type="button" onClick={onResolved}>
         <CheckCircle size={12} aria-hidden="true" />
         해결됐어요
       </button>
+      <button className="chatbot-user-chip" type="button" onClick={onUnresolved}>
+        아직 해결되지 않았어요
+      </button>
       <button className="chatbot-user-chip chatbot-user-chip--blue" type="button" onClick={onAI}>
         <Bot size={12} aria-hidden="true" />
-        AI에게 이어서 질문
+        AI에게 질문
       </button>
       <button className="chatbot-user-chip" type="button" onClick={onAgent}>
         <Headphones size={12} aria-hidden="true" />
@@ -179,6 +190,13 @@ export function ChatbotFab() {
 
   const { isOpen, isMinimized, status, selectedPath, currentStepId, unreadCount } = session;
 
+  // Remove the current sessionId from the guard Set before starting a new session
+  // so the new session's fresh ID can be initialized cleanly.
+  function handleStartNewSession() {
+    _initializedSessions.delete(session.sessionId);
+    startNewSession();
+  }
+
   // ── Smart scroll: only auto-scroll when user is at/near the bottom ─────────
   useEffect(() => {
     if (!isOpen || isMinimized) return;
@@ -206,24 +224,46 @@ export function ChatbotFab() {
   }, [isOpen, isMinimized, markRead]);
 
   // ── Init: show greeting + first choices when session starts fresh ──────────
+  // Uses a module-level Set keyed by sessionId so Strict Mode's double-invoke
+  // of effects cannot produce a duplicate welcome message.
   useEffect(() => {
-    if (status === "BOT" && messages.length === 0) {
-      const faqContext =
-        selectedPath.length === 1 && selectedPath[0].stepId === "faq"
-          ? selectedPath[0].selectedOptionLabel
-          : null;
-
-      const greetMsg = addMessage({
-        role: "bot",
-        content: faqContext
-          ? `안녕하세요. FAQ에서 이어진 문의를 확인했습니다.\n"${faqContext}"\n\n아래에서 관련 문제 유형을 선택해 주세요.`
-          : "안녕하세요. DeepOrder KDS 고객지원입니다.\n아래에서 문제 유형을 선택해 주세요.",
-      });
-      setCurrentStep("initial");
-      setActiveChoicesMsgId(greetMsg.id);
+    if (_initializedSessions.has(session.sessionId)) {
+      // Session already initialized — just restore the active chip pointer
+      if (messages.length > 0 && currentStepId) {
+        const lastBotMsg = [...messages].reverse().find((m) => m.role === "bot");
+        if (lastBotMsg) setActiveChoicesMsgId(lastBotMsg.id);
+      }
+      return;
     }
+    _initializedSessions.add(session.sessionId);
+
+    if (status !== "BOT") return;
+
+    if (messages.length > 0) {
+      // Session already has messages (restored from storage) — restore active chips
+      if (currentStepId) {
+        const lastBotMsg = [...messages].reverse().find((m) => m.role === "bot");
+        if (lastBotMsg) setActiveChoicesMsgId(lastBotMsg.id);
+      }
+      return;
+    }
+
+    // Fresh session — show welcome message + initial choices
+    const faqContext =
+      selectedPath.length === 1 && selectedPath[0].stepId === "faq"
+        ? selectedPath[0].selectedOptionLabel
+        : null;
+
+    const greetMsg = addMessage({
+      role: "bot",
+      content: faqContext
+        ? `안녕하세요. FAQ에서 이어진 문의를 확인했습니다.\n"${faqContext}"\n\n아래에서 관련 문제 유형을 선택해 주세요.`
+        : "안녕하세요. DeepOrder KDS 고객지원입니다.\n아래에서 문제 유형을 선택해 주세요.",
+    });
+    setCurrentStep("initial");
+    setActiveChoicesMsgId(greetMsg.id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session.sessionId]);
 
   // ── Simulate agent connecting after WAITING_AGENT ─────────────────────────
   useEffect(() => {
@@ -304,18 +344,30 @@ export function ChatbotFab() {
     if (nextStepId && QNA_STEPS[nextStepId]) {
       const nextStep = QNA_STEPS[nextStepId];
       const botMsg = addMessage({ role: "bot", content: nextStep.question });
-      setCurrentStep(nextStepId);
-      setActiveChoicesMsgId(botMsg.id);
+
+      if (nextStep.autoTerminal) {
+        // Deliver answer directly — skip confirm chip, go straight to terminal
+        const terminalMsg = addMessage({ role: "bot", content: "문제가 해결되었나요?" });
+        setCurrentStep("terminal");
+        setActiveChoicesMsgId(terminalMsg.id);
+      } else {
+        setCurrentStep(nextStepId);
+        setActiveChoicesMsgId(botMsg.id);
+      }
     }
   }
 
   // ── Terminal choice handler ────────────────────────────────────────────────
-  function handleTerminalChoice(choice: "resolved" | "ai" | "agent" | "restart") {
+  function handleTerminalChoice(choice: "resolved" | "unresolved" | "ai" | "agent" | "restart") {
     setActiveChoicesMsgId(null);
     userScrolledUpRef.current = false;
     if (choice === "resolved") {
       addMessage({ role: "system", content: "문제가 해결되었습니다. 도움이 되었으면 좋겠습니다." });
       endSession();
+      return;
+    }
+    if (choice === "unresolved") {
+      transitionToAgent(selectedPath);
       return;
     }
     if (choice === "ai") transitionToAI(selectedPath);
@@ -416,15 +468,12 @@ export function ChatbotFab() {
   const showAgentBtn = status === "AI";
   const showEndBtn = status === "AI" || status === "AGENT";
 
-  // ── FAB label ──────────────────────────────────────────────────────────────
-  const fabLabel = isOpen && !isMinimized ? "챗봇 최소화" : "챗봇 상담 열기";
-
   return (
     <>
-      {/* Floating panel */}
-      {isOpen ? (
+      {/* Floating panel — hidden entirely when minimized (minimized = FAB only visible) */}
+      {isOpen && !isMinimized ? (
         <div
-          className={`chatbot-panel${isMinimized ? " chatbot-panel--minimized" : ""}`}
+          className="chatbot-panel"
           role="dialog"
           aria-label="챗봇 상담"
           aria-modal="false"
@@ -482,31 +531,18 @@ export function ChatbotFab() {
                   <X size={14} aria-hidden="true" />
                 </button>
               ) : null}
-              <button
-                className="chatbot-header-icon-btn"
-                onClick={minimize}
-                type="button"
-                title={isMinimized ? "펼치기" : "최소화"}
-                aria-label={isMinimized ? "펼치기" : "최소화"}
-              >
-                <Minus size={14} aria-hidden="true" />
-              </button>
-              <button
-                className="chatbot-header-icon-btn"
-                onClick={close}
-                type="button"
-                title="닫기"
-                aria-label="닫기"
-              >
-                <X size={14} aria-hidden="true" />
-              </button>
+              {/*
+               * 최소화 버튼, 닫기 버튼 제거.
+               * - 최소화: 외부 클릭 또는 FAB 버튼 클릭으로만 동작.
+               * - 닫기(패널 숨김): 추후 세션 만료 등의 이벤트에서 close()를 호출해 구현 예정.
+               *   현재는 미구현 상태이며 FAB를 통한 재오픈으로 대체.
+               */}
             </div>
           </div>
 
-          {/* Body — hidden when minimized */}
-          {!isMinimized ? (
-            <>
-              {/* Messages */}
+          {/* Body */}
+          <>
+            {/* Messages */}
               <div
                 className="chatbot-messages"
                 ref={messagesRef}
@@ -546,30 +582,38 @@ export function ChatbotFab() {
                   if (msg.role === "bot") {
                     const isActive = msg.id === activeChoicesMsgId;
                     return (
-                      <div key={msg.id} className="chatbot-msg chatbot-msg--bot">
-                        <div className="chatbot-msg-avatar chatbot-msg-avatar--bot" aria-hidden="true">
-                          <MessageCircle size={12} />
-                        </div>
-                        <div className="chatbot-msg-body">
-                          <div className="chatbot-bubble chatbot-bubble--bot">
-                            {msg.content.split("\n").map((line, i) => (
-                              <p key={i}>{line || "\u00A0"}</p>
-                            ))}
+                      <div key={msg.id} className="chatbot-msg-group">
+                        {/* Bot bubble row */}
+                        <div className="chatbot-msg chatbot-msg--bot">
+                          <div className="chatbot-msg-avatar chatbot-msg-avatar--bot" aria-hidden="true">
+                            <MessageCircle size={12} />
                           </div>
-                          <time className="chatbot-msg-time">{formatTime(msg.timestamp)}</time>
-                          {/* Choices rendered as user-side chips below the bot message */}
-                          {isActive && currentStepId && currentStepId !== "terminal" ? (
+                          <div className="chatbot-msg-body">
+                            <div className="chatbot-bubble chatbot-bubble--bot">
+                              {msg.content.split("\n").map((line, i) => (
+                                <p key={i}>{line || "\u00A0"}</p>
+                              ))}
+                            </div>
+                            <time className="chatbot-msg-time">{formatTime(msg.timestamp)}</time>
+                          </div>
+                        </div>
+                        {/* Chips row — right-aligned, outside the bot bubble */}
+                        {isActive && currentStepId && currentStepId !== "terminal" ? (
+                          <div className="chatbot-choice-row">
                             <UserChoiceChips stepId={currentStepId} onChoose={handleBotChoice} />
-                          ) : null}
-                          {isActive && currentStepId === "terminal" ? (
+                          </div>
+                        ) : null}
+                        {isActive && currentStepId === "terminal" ? (
+                          <div className="chatbot-choice-row">
                             <TerminalChips
                               onResolved={() => handleTerminalChoice("resolved")}
+                              onUnresolved={() => handleTerminalChoice("unresolved")}
                               onAI={() => handleTerminalChoice("ai")}
                               onAgent={() => handleTerminalChoice("agent")}
                               onRestart={() => handleTerminalChoice("restart")}
                             />
-                          ) : null}
-                        </div>
+                          </div>
+                        ) : null}
                       </div>
                     );
                   }
@@ -674,7 +718,7 @@ export function ChatbotFab() {
                   <p>상담이 종료되었습니다.</p>
                   <button
                     className="chatbot-new-session-btn"
-                    onClick={startNewSession}
+                    onClick={handleStartNewSession}
                     type="button"
                   >
                     <RefreshCcw size={12} aria-hidden="true" />
@@ -682,23 +726,18 @@ export function ChatbotFab() {
                   </button>
                 </div>
               ) : null}
-            </>
-          ) : null}
+          </>
         </div>
       ) : null}
 
-      {/* FAB */}
+      {/* FAB — always visible; toggles between open and minimized */}
       <button
-        aria-label={fabLabel}
+        aria-label={isOpen && !isMinimized ? "챗봇 최소화" : "챗봇 상담 열기"}
         className={`chatbot-fab${isOpen && !isMinimized ? " chatbot-fab--open" : ""}`}
-        onClick={() => (isOpen ? minimize() : open())}
+        onClick={() => (isOpen && !isMinimized ? minimize() : open())}
         type="button"
       >
-        {isOpen && !isMinimized ? (
-          <Minus size={22} aria-hidden="true" />
-        ) : (
-          <MessageCircle size={22} aria-hidden="true" />
-        )}
+        <MessageCircle size={22} aria-hidden="true" />
         {unreadCount > 0 && (!isOpen || isMinimized) ? (
           <span className="chatbot-fab-badge" aria-label={`읽지 않은 메시지 ${unreadCount}개`}>
             {unreadCount > 9 ? "9+" : unreadCount}
