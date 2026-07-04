@@ -2157,7 +2157,7 @@ button:not(:disabled):hover {
 
 /* ═══════════════════════════════════════════════
    Badge — inline status chips
-═════════════════════════════════════════�������═════ */
+═════════════════════════════════════════�����═════ */
 .kds-badge {
   border-radius: 999px;
   display: inline-block;
@@ -3313,13 +3313,7 @@ button:not(:disabled):hover {
   color: var(--color-text);
 }
 
-/* ── Header waiting loader ── */
-.chatbot-header-loader {
-  color: var(--color-amber);
-  flex-shrink: 0;
-}
-
-/* ── Status badge (kept for potential future use, but not rendered in header) ── */
+/* ── Status badge ── */
 .chatbot-status-badge {
   align-items: center;
   border-radius: 999px;
@@ -3412,14 +3406,6 @@ button:not(:disabled):hover {
   padding: 3px 10px;
   text-align: center;
   white-space: pre-line;
-}
-
-/* Message group: wraps bot bubble + its associated choice chip row */
-.chatbot-msg-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
 }
 
 /* Message rows */
@@ -3528,21 +3514,15 @@ button:not(:disabled):hover {
 
 .chatbot-msg-time--user { text-align: right; }
 
-/* ── Choice row: standalone right-aligned row for Q&A chips ── */
-.chatbot-choice-row {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-
-/* ── User choice chips (right-aligned, flex-wrap adaptive layout) ── */
+/* ── User choice chips (right-aligned, rendered under bot message) ── */
 .chatbot-user-chips {
+  align-items: flex-end;
+  align-self: flex-end;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: flex-end;
-  max-width: 86%;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 6px;
+  width: 100%;
 }
 
 .chatbot-user-chip {
@@ -3552,7 +3532,6 @@ button:not(:disabled):hover {
   border-radius: 999px;
   color: var(--color-text);
   display: inline-flex;
-  flex-shrink: 0;
   font-size: 12px;
   font-weight: 500;
   gap: 5px;
@@ -3561,10 +3540,8 @@ button:not(:disabled):hover {
   padding: 7px 14px;
   text-align: center;
   transition: background 0.1s, border-color 0.1s;
-  white-space: nowrap;
 }
 
-/* Long chips: allow wrapping text within the chip itself */
 .chatbot-user-chip:not(:disabled):hover {
   background: var(--color-surface-2) !important;
   border-color: var(--color-border-hover);
