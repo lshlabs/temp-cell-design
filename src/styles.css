@@ -2157,7 +2157,7 @@ button:not(:disabled):hover {
 
 /* ═══════════════════════════════════════════════
    Badge — inline status chips
-═════════════════════════════════════════���═════ */
+═════════════════════════════════════════�����═════ */
 .kds-badge {
   border-radius: 999px;
   display: inline-block;
@@ -2908,6 +2908,7 @@ button:not(:disabled):hover {
 .support-faq-search-input {
   background: transparent;
   border: none;
+  box-shadow: none;
   color: var(--color-text);
   flex: 1;
   font: inherit;
@@ -2915,6 +2916,13 @@ button:not(:disabled):hover {
   height: 36px;
   outline: none;
   padding: 0;
+  width: auto;
+}
+
+/* Override global input:focus inside the search field wrapper */
+.support-faq-search-field .support-faq-search-input:focus {
+  border: none;
+  box-shadow: none;
 }
 
 .support-faq-search-input::placeholder { color: var(--color-text-muted); }
@@ -2937,7 +2945,7 @@ button:not(:disabled):hover {
   width: 22px;
 }
 
-.support-faq-search-clear:hover { color: var(--color-text); }
+.support-faq-search-clear:hover { background: transparent; color: var(--color-text); }
 
 /* Category tabs */
 .support-faq-tabs {
@@ -2968,7 +2976,7 @@ button:not(:disabled):hover {
 }
 
 .support-faq-tab:not(:disabled):hover {
-  background: var(--color-surface-2);
+  background: var(--color-surface-2) !important;
   color: var(--color-text);
 }
 
@@ -2977,6 +2985,10 @@ button:not(:disabled):hover {
   border-color: var(--color-accent-border);
   color: var(--color-accent);
   font-weight: 600;
+}
+
+.support-faq-tab.active:not(:disabled):hover {
+  background: var(--color-accent-subtle) !important;
 }
 
 /* FAQ list */
@@ -3025,7 +3037,7 @@ button:not(:disabled):hover {
 }
 
 .support-faq-question:not(:disabled):hover {
-  background: var(--color-surface-2);
+  background: var(--color-surface-2) !important;
 }
 
 .support-faq-chevron {
@@ -3078,6 +3090,7 @@ button:not(:disabled):hover {
 }
 
 .support-faq-ask-ai:not(:disabled):hover {
+  background: var(--color-accent-subtle) !important;
   border-color: var(--color-accent-border);
   color: var(--color-accent);
 }
@@ -3223,20 +3236,36 @@ button:not(:disabled):hover {
   border-bottom: 1px solid var(--color-border);
   display: flex;
   flex-shrink: 0;
-  gap: 8px;
-  height: 48px;
+  gap: 10px;
+  height: 52px;
   padding: 0 10px 0 14px;
+}
+
+.chatbot-header-icon {
+  align-items: center;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent-border);
+  border-radius: 50%;
+  color: var(--color-accent);
+  display: flex;
+  flex-shrink: 0;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
 }
 
 .chatbot-header-title {
   align-items: center;
-  color: var(--color-text);
   display: flex;
   flex: 1;
-  font-size: 13px;
-  font-weight: 600;
   gap: 6px;
   min-width: 0;
+}
+
+.chatbot-header-name {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .chatbot-header-actions {
@@ -3261,6 +3290,7 @@ button:not(:disabled):hover {
 }
 
 .chatbot-header-action-btn:not(:disabled):hover {
+  background: var(--color-surface-2) !important;
   color: var(--color-text);
   border-color: var(--color-border-hover);
 }
@@ -3279,7 +3309,7 @@ button:not(:disabled):hover {
 }
 
 .chatbot-header-icon-btn:not(:disabled):hover {
-  background: var(--color-surface-2);
+  background: var(--color-surface-2) !important;
   color: var(--color-text);
 }
 
@@ -3380,21 +3410,20 @@ button:not(:disabled):hover {
 
 /* Message rows */
 .chatbot-msg {
-  align-items: flex-end;
+  align-items: flex-start;
   display: flex;
-  gap: 7px;
-  max-width: 86%;
+  gap: 8px;
+  width: 100%;
 }
 
 .chatbot-msg--user {
-  align-self: flex-end;
-  flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 
 .chatbot-msg--bot,
 .chatbot-msg--ai,
 .chatbot-msg--agent {
-  align-self: flex-start;
+  justify-content: flex-start;
 }
 
 .chatbot-msg-avatar {
@@ -3403,9 +3432,10 @@ button:not(:disabled):hover {
   color: #fff;
   display: flex;
   flex-shrink: 0;
-  height: 24px;
+  height: 26px;
   justify-content: center;
-  width: 24px;
+  margin-top: 2px;
+  width: 26px;
 }
 
 .chatbot-msg-avatar--bot { background: var(--color-text-muted); }
@@ -3415,48 +3445,62 @@ button:not(:disabled):hover {
 .chatbot-msg-body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  max-width: 82%;
   min-width: 0;
 }
 
-/* Bubbles */
+.chatbot-msg-body--user {
+  align-items: flex-end;
+  max-width: 82%;
+}
+
+/* ── Bubbles ── */
 .chatbot-bubble {
   border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 8px 11px;
+  gap: 2px;
+  padding: 9px 12px;
 }
 
 .chatbot-bubble p {
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.6;
   margin: 0;
 }
 
+/* User bubble: accent filled pill */
 .chatbot-bubble--user {
   background: var(--color-accent);
+  border-radius: 16px 16px 4px 16px;
 }
 
 .chatbot-bubble--user p { color: #fff; }
 
+/* Bot bubble: plain card with subtle bg */
 .chatbot-bubble--bot {
-  background: var(--color-surface);
+  background: var(--color-surface-2);
   border: 1px solid var(--color-border);
+  border-radius: 4px 16px 16px 16px;
 }
 
 .chatbot-bubble--bot p { color: var(--color-text); }
 
+/* AI bubble */
 .chatbot-bubble--ai {
-  background: rgba(59, 130, 246, 0.06);
-  border: 1px solid rgba(59, 130, 246, 0.18);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 4px 16px 16px 16px;
 }
 
 .chatbot-bubble--ai p { color: var(--color-text); }
 
+/* Agent bubble */
 .chatbot-bubble--agent {
   background: var(--color-green-subtle);
   border: 1px solid var(--color-green-border);
+  border-radius: 4px 16px 16px 16px;
 }
 
 .chatbot-bubble--agent p { color: var(--color-text); }
@@ -3465,59 +3509,57 @@ button:not(:disabled):hover {
   color: var(--color-text-muted);
   display: block;
   font-size: 10px;
+  padding: 0 2px;
 }
 
-.chatbot-msg--user .chatbot-msg-time { text-align: right; }
+.chatbot-msg-time--user { text-align: right; }
 
-/* ── Bot choices ── */
-.chatbot-choices {
+/* ── User choice chips (right-aligned, rendered under bot message) ── */
+.chatbot-user-chips {
+  align-items: flex-end;
+  align-self: flex-end;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.chatbot-choice-btn {
-  align-items: center;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  display: flex;
-  font-size: 12px;
-  font-weight: 500;
-  gap: 6px;
-  height: auto;
-  justify-content: flex-start;
-  min-height: 36px;
-  padding: 7px 10px;
-  text-align: left;
-  transition: background 0.1s, border-color 0.1s;
+  gap: 5px;
+  margin-top: 6px;
   width: 100%;
 }
 
-.chatbot-choice-btn:not(:disabled):hover {
-  background: var(--color-surface-2);
+.chatbot-user-chip {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 5px;
+  height: auto;
+  justify-content: center;
+  padding: 7px 14px;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.chatbot-user-chip:not(:disabled):hover {
+  background: var(--color-surface-2) !important;
   border-color: var(--color-border-hover);
 }
 
-.chatbot-choice-resolved {
+.chatbot-user-chip--green {
   border-color: var(--color-green-border);
   color: var(--color-green);
 }
 
-.chatbot-choice-resolved:not(:disabled):hover { background: var(--color-green-subtle); }
+.chatbot-user-chip--green:not(:disabled):hover { background: var(--color-green-subtle) !important; }
 
-.chatbot-choice-ai {
+.chatbot-user-chip--blue {
   border-color: rgba(59, 130, 246, 0.22);
   color: #3b82f6;
 }
 
-.chatbot-choice-ai:not(:disabled):hover { background: rgba(59, 130, 246, 0.05); }
-
-.chatbot-choice-agent {
-  color: var(--color-text-subtle);
-}
+.chatbot-user-chip--blue:not(:disabled):hover { background: rgba(59, 130, 246, 0.05) !important; }
 
 /* ── Typing indicator ── */
 .chatbot-typing {
@@ -3651,6 +3693,7 @@ button:not(:disabled):hover {
 }
 
 .chatbot-new-session-btn:not(:disabled):hover {
+  background: var(--color-surface-3) !important;
   border-color: var(--color-border-hover);
 }
 

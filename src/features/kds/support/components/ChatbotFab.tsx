@@ -4,8 +4,11 @@
  * Floating Action Button + the floating chatbot panel.
  * All chatbot state lives in useChatbotSession (persisted to sessionStorage).
  *
- * State machine inside the panel:
- *   BOT          → guided Q&A choices rendered as chat messages
+ * Design reference: Air Premia chatbot — plain text bot messages, user selections
+ * appear as right-aligned pill chips (not left-side bot choices).
+ *
+ * State machine:
+ *   BOT          → guided Q&A; user choices shown as right-aligned chips
  *   AI           → free-text input, simulated AI replies
  *   WAITING_AGENT → input disabled, timer simulates agent connecting
  *   AGENT        → free-text input, simulated agent replies
@@ -14,10 +17,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowLeft,
   Bot,
   CheckCircle,
-  ChevronRight,
   Headphones,
   Loader,
   MessageCircle,
@@ -71,61 +72,43 @@ function nextAiReply(): string {
   return r;
 }
 
-// ─── BotChoices sub-component ─────────────────────────────────────────────────
+// ─── UserChoiceChips ──────────────────────────────────────────────────────────
+// Renders the guided Q&A options as right-aligned pill chips (user's perspective).
 
-type BotChoicesProps = {
+type UserChoiceChipsProps = {
   stepId: string;
   onChoose: (label: string, nextStepId?: string, terminal?: string, answer?: string) => void;
 };
 
-function BotChoices({ stepId, onChoose }: BotChoicesProps) {
-  if (stepId === "initial") {
-    return (
-      <div className="chatbot-choices">
-        {QNA_INITIAL_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            className="chatbot-choice-btn"
-            type="button"
-            onClick={() =>
-              onChoose(opt.label, opt.nextStepId, opt.terminal)
-            }
-          >
-            <ChevronRight size={13} aria-hidden="true" />
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    );
-  }
+function UserChoiceChips({ stepId, onChoose }: UserChoiceChipsProps) {
+  const options =
+    stepId === "initial"
+      ? QNA_INITIAL_OPTIONS.map((opt) => ({
+          id: opt.id,
+          label: opt.label,
+          nextStepId: opt.nextStepId,
+          terminal: opt.terminal,
+          answer: undefined as string | undefined,
+        }))
+      : (QNA_STEPS[stepId]?.options ?? []).map((opt) => ({
+          id: opt.id,
+          label: opt.label,
+          nextStepId: opt.nextStepId,
+          terminal: opt.terminal,
+          answer: opt.answer,
+        }));
 
-  const step = QNA_STEPS[stepId];
-  if (!step) return null;
+  if (options.length === 0) return null;
 
   return (
-    <div className="chatbot-choices">
-      {step.options.map((opt) => (
+    <div className="chatbot-user-chips">
+      {options.map((opt) => (
         <button
           key={opt.id}
-          className={`chatbot-choice-btn${
-            opt.terminal === "resolved"
-              ? " chatbot-choice-resolved"
-              : opt.terminal === "agent"
-              ? " chatbot-choice-agent"
-              : opt.terminal === "ai"
-              ? " chatbot-choice-ai"
-              : ""
-          }`}
+          className="chatbot-user-chip"
           type="button"
-          onClick={() =>
-            onChoose(opt.label, opt.nextStepId, opt.terminal, opt.answer)
-          }
+          onClick={() => onChoose(opt.label, opt.nextStepId, opt.terminal, opt.answer)}
         >
-          {opt.terminal === "resolved" ? (
-            <CheckCircle size={13} aria-hidden="true" />
-          ) : (
-            <ChevronRight size={13} aria-hidden="true" />
-          )}
           {opt.label}
         </button>
       ))}
@@ -133,40 +116,32 @@ function BotChoices({ stepId, onChoose }: BotChoicesProps) {
   );
 }
 
-// ─── Terminal choices (always shown at the end of a resolved branch) ───────────
+// ─── TerminalChips ────────────────────────────────────────────────────────────
 
-type TerminalChoicesProps = {
+type TerminalChipsProps = {
   onResolved: () => void;
   onAI: () => void;
   onAgent: () => void;
   onRestart: () => void;
 };
 
-function TerminalChoices({ onResolved, onAI, onAgent, onRestart }: TerminalChoicesProps) {
+function TerminalChips({ onResolved, onAI, onAgent, onRestart }: TerminalChipsProps) {
   return (
-    <div className="chatbot-choices">
-      <button
-        className="chatbot-choice-btn chatbot-choice-resolved"
-        type="button"
-        onClick={onResolved}
-      >
-        <CheckCircle size={13} aria-hidden="true" />
+    <div className="chatbot-user-chips">
+      <button className="chatbot-user-chip chatbot-user-chip--green" type="button" onClick={onResolved}>
+        <CheckCircle size={12} aria-hidden="true" />
         해결됐어요
       </button>
-      <button className="chatbot-choice-btn chatbot-choice-ai" type="button" onClick={onAI}>
-        <Bot size={13} aria-hidden="true" />
+      <button className="chatbot-user-chip chatbot-user-chip--blue" type="button" onClick={onAI}>
+        <Bot size={12} aria-hidden="true" />
         AI에게 이어서 질문
       </button>
-      <button
-        className="chatbot-choice-btn chatbot-choice-agent"
-        type="button"
-        onClick={onAgent}
-      >
-        <Headphones size={13} aria-hidden="true" />
+      <button className="chatbot-user-chip" type="button" onClick={onAgent}>
+        <Headphones size={12} aria-hidden="true" />
         상담원 연결
       </button>
-      <button className="chatbot-choice-btn" type="button" onClick={onRestart}>
-        <RefreshCcw size={13} aria-hidden="true" />
+      <button className="chatbot-user-chip" type="button" onClick={onRestart}>
+        <RefreshCcw size={12} aria-hidden="true" />
         처음으로
       </button>
     </div>
@@ -194,32 +169,45 @@ export function ChatbotFab() {
 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  // Tracks which message IDs have already had their choices rendered,
-  // so we only render the latest choice prompt and hide older ones.
   const [activeChoicesMsgId, setActiveChoicesMsgId] = useState<string | null>(null);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const agentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether the user has scrolled up away from the bottom
+  const userScrolledUpRef = useRef(false);
 
   const { isOpen, isMinimized, status, selectedPath, currentStepId, unreadCount } = session;
 
-  // ── Scroll to bottom whenever messages change ──────────────────────────────
+  // ── Smart scroll: only auto-scroll when user is at/near the bottom ─────────
   useEffect(() => {
-    if (isOpen && !isMinimized) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
+    if (!isOpen || isMinimized) return;
+    const el = messagesRef.current;
+    if (!el) return;
+    // If the user has scrolled up, don't hijack their scroll position
+    if (userScrolledUpRef.current) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages, isOpen, isMinimized]);
 
-  // ── Mark read when panel becomes visible ──────────────────────────────────
+  // Track whether user has scrolled away from the bottom
+  function handleMessagesScroll() {
+    const el = messagesRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    userScrolledUpRef.current = distFromBottom > 60;
+  }
+
+  // When panel is opened/un-minimized, reset scroll lock
   useEffect(() => {
-    if (isOpen && !isMinimized) markRead();
+    if (isOpen && !isMinimized) {
+      userScrolledUpRef.current = false;
+      markRead();
+    }
   }, [isOpen, isMinimized, markRead]);
 
   // ── Init: show greeting + first choices when session starts fresh ──────────
   useEffect(() => {
     if (status === "BOT" && messages.length === 0) {
-      // Check for a FAQ context that was passed in
       const faqContext =
         selectedPath.length === 1 && selectedPath[0].stepId === "faq"
           ? selectedPath[0].selectedOptionLabel
@@ -229,7 +217,7 @@ export function ChatbotFab() {
         role: "bot",
         content: faqContext
           ? `안녕하세요. FAQ에서 이어진 문의를 확인했습니다.\n"${faqContext}"\n\n아래에서 관련 문제 유형을 선택해 주세요.`
-          : "안녕하세요. DeepOrder KDS 고객지원입니다. 아래에서 문제 유형을 선택해 주세요.",
+          : "안녕하세요. DeepOrder KDS 고객지원입니다.\n아래에서 문제 유형을 선택해 주세요.",
       });
       setCurrentStep("initial");
       setActiveChoicesMsgId(greetMsg.id);
@@ -243,12 +231,11 @@ export function ChatbotFab() {
     if (agentTimerRef.current) clearTimeout(agentTimerRef.current);
     agentTimerRef.current = setTimeout(() => {
       setStatus("AGENT");
-      const m = addMessage({ role: "system", content: "상담원이 연결되었습니다." });
+      addMessage({ role: "system", content: "상담원이 연결되었습니다." });
       incrementUnread();
-      const agentMsg = addMessage({
+      addMessage({
         role: "agent",
-        content:
-          "안녕하세요. 상담원입니다. 불편을 드려 죄송합니다. 확인한 내용을 바탕으로 도움을 드리겠습니다.",
+        content: "안녕하세요. 상담원입니다. 불편을 드려 죄송합니다. 확인한 내용을 바탕으로 도움을 드리겠습니다.",
       });
       setActiveChoicesMsgId(null);
       incrementUnread();
@@ -266,23 +253,26 @@ export function ChatbotFab() {
     terminal?: string,
     answer?: string
   ) {
-    // Record user choice as a message
-    const userMsg = addMessage({ role: "user", content: label });
+    // Record user selection as a user bubble (right-side)
+    addMessage({ role: "user", content: label });
     setActiveChoicesMsgId(null);
+    userScrolledUpRef.current = false; // auto-scroll after user action
 
     const newEntry: QnaPathEntry = {
       stepId: currentStepId ?? "initial",
-      question: currentStepId === "initial" ? "어떻게 도와드릴까요?" : (QNA_STEPS[currentStepId ?? ""]?.question ?? ""),
+      question:
+        currentStepId === "initial"
+          ? "어떻게 도와드릴까요?"
+          : (QNA_STEPS[currentStepId ?? ""]?.question ?? ""),
       selectedOptionLabel: label,
     };
     const newPath = [...selectedPath, newEntry];
     setPath(newPath);
 
     if (terminal === "resolved") {
-      // Show the terminal choices (해결/AI/agent/restart)
       const botMsg = addMessage({
         role: "bot",
-        content: "문제가 해결되었나요? 아래에서 선택해 주세요.",
+        content: "문제가 해결되었나요?",
       });
       setCurrentStep("terminal");
       setActiveChoicesMsgId(botMsg.id);
@@ -297,7 +287,6 @@ export function ChatbotFab() {
       return;
     }
 
-    // Show answer card if present
     if (answer) {
       addMessage({ role: "bot", content: answer });
     }
@@ -305,7 +294,7 @@ export function ChatbotFab() {
     if (nextStepId === "terminal") {
       const botMsg = addMessage({
         role: "bot",
-        content: "문제가 해결되었나요? 아래에서 선택해 주세요.",
+        content: "문제가 해결되었나요?",
       });
       setCurrentStep("terminal");
       setActiveChoicesMsgId(botMsg.id);
@@ -323,6 +312,7 @@ export function ChatbotFab() {
   // ── Terminal choice handler ────────────────────────────────────────────────
   function handleTerminalChoice(choice: "resolved" | "ai" | "agent" | "restart") {
     setActiveChoicesMsgId(null);
+    userScrolledUpRef.current = false;
     if (choice === "resolved") {
       addMessage({ role: "system", content: "문제가 해결되었습니다. 도움이 되었으면 좋겠습니다." });
       endSession();
@@ -347,18 +337,16 @@ export function ChatbotFab() {
     const summary = buildPathSummary(path);
     setStatus("AI");
     if (summary) {
-      addMessage({
-        role: "system",
-        content: `선택 경로: ${summary}`,
-      });
+      addMessage({ role: "system", content: `선택 경로: ${summary}` });
     }
     addMessage({
       role: "ai",
       content: summary
-        ? `지금까지 선택하신 내용(${summary})을 확인했습니다. 추가로 궁금한 점을 자유롭게 입력해 주세요.\n\nkds-web 기능 범위 내에서 안내하며, 주문·계정·직원 데이터의 직접 변경은 수행하지 않습니다.`
-        : "안녕하세요, AI 상담 도우미입니다. 궁금한 점을 자유롭게 입력해 주세요.\n\nkds-web 기능 범위 내에서 안내하며, 주문·계정·직원 데이터의 직접 변경은 수행하지 않습니다.",
+        ? `지금까지 선택하신 내용을 확인했습니다.\n추가로 궁금한 점을 자유롭게 입력해 주세요.`
+        : "안녕하세요, AI 상담 도우미입니다. 궁금한 점을 자유롭게 입력해 주세요.",
     });
     setActiveChoicesMsgId(null);
+    userScrolledUpRef.current = false;
     setTimeout(() => textareaRef.current?.focus(), 80);
   }
 
@@ -368,13 +356,14 @@ export function ChatbotFab() {
     addMessage({
       role: "system",
       content: summary
-        ? `상담원에게 지금까지 확인한 내용을 전달합니다.\n선택 경로: ${summary}`
+        ? `상담원에게 이전 내용을 전달합니다.\n선택 경로: ${summary}`
         : "상담원 연결을 요청합니다.",
     });
     addMessage({
       role: "system",
       content: "상담원 연결 대기 중입니다. 이전 상담 내용은 상담원에게 함께 전달됩니다.",
     });
+    userScrolledUpRef.current = false;
   }
 
   // ── Free-text send ─────────────────────────────────────────────────────────
@@ -383,15 +372,16 @@ export function ChatbotFab() {
     if (!text || sending || status === "CLOSED" || status === "BOT" || status === "WAITING_AGENT") return;
     setInput("");
     setSending(true);
+    userScrolledUpRef.current = false;
     addMessage({ role: "user", content: text });
 
     if (status === "AI") {
       await new Promise((r) => setTimeout(r, 900));
-      const reply = addMessage({ role: "ai", content: nextAiReply() });
+      addMessage({ role: "ai", content: nextAiReply() });
       incrementUnread();
     } else if (status === "AGENT") {
       await new Promise((r) => setTimeout(r, 1200));
-      const reply = addMessage({
+      addMessage({
         role: "agent",
         content: "확인했습니다. 조금 더 상세히 확인 후 안내해 드리겠습니다.",
       });
@@ -422,13 +412,11 @@ export function ChatbotFab() {
   }
 
   // ── Computed flags ─────────────────────────────────────────────────────────
-  const canType =
-    status === "AI" || status === "AGENT";
-  const showInputArea = canType;
+  const canType = status === "AI" || status === "AGENT";
   const showAgentBtn = status === "AI";
   const showEndBtn = status === "AI" || status === "AGENT";
 
-  // ── FAB ────────────────────────────────────────────────────────────────────
+  // ── FAB label ──────────────────────────────────────────────────────────────
   const fabLabel = isOpen && !isMinimized ? "챗봇 최소화" : "챗봇 상담 열기";
 
   return (
@@ -443,15 +431,17 @@ export function ChatbotFab() {
         >
           {/* Header */}
           <div className="chatbot-header">
-            <div className="chatbot-header-title">
+            <div className="chatbot-header-icon" aria-hidden="true">
               {status === "AI" ? (
-                <Bot size={15} aria-hidden="true" />
+                <Bot size={16} />
               ) : status === "AGENT" || status === "WAITING_AGENT" ? (
-                <Headphones size={15} aria-hidden="true" />
+                <Headphones size={16} />
               ) : (
-                <MessageCircle size={15} aria-hidden="true" />
+                <MessageCircle size={16} />
               )}
-              <span>
+            </div>
+            <div className="chatbot-header-title">
+              <span className="chatbot-header-name">
                 {status === "AI"
                   ? "AI 상담"
                   : status === "WAITING_AGENT"
@@ -460,11 +450,11 @@ export function ChatbotFab() {
                   ? "상담원 상담"
                   : status === "CLOSED"
                   ? "상담 종료"
-                  : "챗봇 상담"}
+                  : "고객지원 챗봇"}
               </span>
               <span className={`chatbot-status-badge ${STATUS_CSS[status]}`}>
                 {status === "WAITING_AGENT" ? (
-                  <Loader size={10} aria-hidden="true" className="chatbot-spin" />
+                  <Loader size={9} aria-hidden="true" className="chatbot-spin" />
                 ) : null}
                 {STATUS_LABELS[status]}
               </span>
@@ -477,8 +467,8 @@ export function ChatbotFab() {
                   type="button"
                   title="상담원 연결"
                 >
-                  <Headphones size={13} aria-hidden="true" />
-                  <span>상담원</span>
+                  <Headphones size={12} aria-hidden="true" />
+                  상담원
                 </button>
               ) : null}
               {showEndBtn ? (
@@ -516,21 +506,16 @@ export function ChatbotFab() {
           {/* Body — hidden when minimized */}
           {!isMinimized ? (
             <>
-              {/* Path breadcrumb */}
-              {selectedPath.length > 0 && status === "BOT" ? (
-                <div className="chatbot-breadcrumb" aria-label="선택 경로">
-                  {selectedPath.map((e, i) => (
-                    <span key={i} className="chatbot-breadcrumb-item">
-                      {i > 0 ? <span aria-hidden="true"> › </span> : null}
-                      {e.selectedOptionLabel}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-
               {/* Messages */}
-              <div className="chatbot-messages" role="log" aria-live="polite">
+              <div
+                className="chatbot-messages"
+                ref={messagesRef}
+                role="log"
+                aria-live="polite"
+                onScroll={handleMessagesScroll}
+              >
                 {messages.map((msg) => {
+                  // ── System message ─────────────────────────────────────────
                   if (msg.role === "system") {
                     return (
                       <div key={msg.id} className="chatbot-msg-system">
@@ -539,42 +524,45 @@ export function ChatbotFab() {
                     );
                   }
 
+                  // ── User message (text typed by user) ──────────────────────
                   if (msg.role === "user") {
                     return (
                       <div key={msg.id} className="chatbot-msg chatbot-msg--user">
-                        <div className="chatbot-bubble chatbot-bubble--user">
-                          {msg.content.split("\n").map((line, i) => (
-                            <p key={i}>{line}</p>
-                          ))}
-                        </div>
-                        <time className="chatbot-msg-time">{formatTime(msg.timestamp)}</time>
-                      </div>
-                    );
-                  }
-
-                  if (msg.role === "bot") {
-                    const isActive = msg.id === activeChoicesMsgId;
-                    return (
-                      <div key={msg.id} className="chatbot-msg chatbot-msg--bot">
-                        <div className="chatbot-msg-avatar chatbot-msg-avatar--bot">
-                          <MessageCircle size={12} aria-hidden="true" />
-                        </div>
-                        <div className="chatbot-msg-body">
-                          <div className="chatbot-bubble chatbot-bubble--bot">
+                        <div className="chatbot-msg-body chatbot-msg-body--user">
+                          <div className="chatbot-bubble chatbot-bubble--user">
                             {msg.content.split("\n").map((line, i) => (
                               <p key={i}>{line}</p>
                             ))}
                           </div>
+                          <time className="chatbot-msg-time chatbot-msg-time--user">
+                            {formatTime(msg.timestamp)}
+                          </time>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // ── Bot message (from guided Q&A) ──────────────────────────
+                  if (msg.role === "bot") {
+                    const isActive = msg.id === activeChoicesMsgId;
+                    return (
+                      <div key={msg.id} className="chatbot-msg chatbot-msg--bot">
+                        <div className="chatbot-msg-avatar chatbot-msg-avatar--bot" aria-hidden="true">
+                          <MessageCircle size={12} />
+                        </div>
+                        <div className="chatbot-msg-body">
+                          <div className="chatbot-bubble chatbot-bubble--bot">
+                            {msg.content.split("\n").map((line, i) => (
+                              <p key={i}>{line || "\u00A0"}</p>
+                            ))}
+                          </div>
                           <time className="chatbot-msg-time">{formatTime(msg.timestamp)}</time>
-                          {/* Render choices only for the currently active message */}
+                          {/* Choices rendered as user-side chips below the bot message */}
                           {isActive && currentStepId && currentStepId !== "terminal" ? (
-                            <BotChoices
-                              stepId={currentStepId}
-                              onChoose={handleBotChoice}
-                            />
+                            <UserChoiceChips stepId={currentStepId} onChoose={handleBotChoice} />
                           ) : null}
                           {isActive && currentStepId === "terminal" ? (
-                            <TerminalChoices
+                            <TerminalChips
                               onResolved={() => handleTerminalChoice("resolved")}
                               onAI={() => handleTerminalChoice("ai")}
                               onAgent={() => handleTerminalChoice("agent")}
@@ -586,16 +574,17 @@ export function ChatbotFab() {
                     );
                   }
 
+                  // ── AI message ─────────────────────────────────────────────
                   if (msg.role === "ai") {
                     return (
                       <div key={msg.id} className="chatbot-msg chatbot-msg--ai">
-                        <div className="chatbot-msg-avatar chatbot-msg-avatar--ai">
-                          <Bot size={12} aria-hidden="true" />
+                        <div className="chatbot-msg-avatar chatbot-msg-avatar--ai" aria-hidden="true">
+                          <Bot size={12} />
                         </div>
                         <div className="chatbot-msg-body">
                           <div className="chatbot-bubble chatbot-bubble--ai">
                             {msg.content.split("\n").map((line, i) => (
-                              <p key={i}>{line}</p>
+                              <p key={i}>{line || "\u00A0"}</p>
                             ))}
                           </div>
                           <time className="chatbot-msg-time">{formatTime(msg.timestamp)}</time>
@@ -604,11 +593,12 @@ export function ChatbotFab() {
                     );
                   }
 
+                  // ── Agent message ──────────────────────────────────────────
                   if (msg.role === "agent") {
                     return (
                       <div key={msg.id} className="chatbot-msg chatbot-msg--agent">
-                        <div className="chatbot-msg-avatar chatbot-msg-avatar--agent">
-                          <Headphones size={12} aria-hidden="true" />
+                        <div className="chatbot-msg-avatar chatbot-msg-avatar--agent" aria-hidden="true">
+                          <Headphones size={12} />
                         </div>
                         <div className="chatbot-msg-body">
                           <div className="chatbot-bubble chatbot-bubble--agent">
@@ -630,16 +620,11 @@ export function ChatbotFab() {
                   <div className="chatbot-msg chatbot-msg--ai">
                     <div
                       className={`chatbot-msg-avatar ${
-                        status === "AGENT"
-                          ? "chatbot-msg-avatar--agent"
-                          : "chatbot-msg-avatar--ai"
+                        status === "AGENT" ? "chatbot-msg-avatar--agent" : "chatbot-msg-avatar--ai"
                       }`}
+                      aria-hidden="true"
                     >
-                      {status === "AGENT" ? (
-                        <Headphones size={12} aria-hidden="true" />
-                      ) : (
-                        <Bot size={12} aria-hidden="true" />
-                      )}
+                      {status === "AGENT" ? <Headphones size={12} /> : <Bot size={12} />}
                     </div>
                     <div className="chatbot-typing">
                       <span />
@@ -648,12 +633,10 @@ export function ChatbotFab() {
                     </div>
                   </div>
                 ) : null}
-
-                <div ref={bottomRef} />
               </div>
 
-              {/* Input area */}
-              {showInputArea ? (
+              {/* Free-text input area */}
+              {canType ? (
                 <div className="chatbot-input-area">
                   <textarea
                     ref={textareaRef}
@@ -694,7 +677,7 @@ export function ChatbotFab() {
                     onClick={startNewSession}
                     type="button"
                   >
-                    <RefreshCcw size={13} aria-hidden="true" />
+                    <RefreshCcw size={12} aria-hidden="true" />
                     새 문의 시작
                   </button>
                 </div>

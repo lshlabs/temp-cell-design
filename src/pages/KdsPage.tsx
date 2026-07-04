@@ -256,6 +256,7 @@ export function KdsPage({ session, onLogout, onUnauthorized }: KdsPageProps) {
         ) : activeTab === "SUPPORT" ? (
           <div className="kds-panel-shell">
             <SupportPanel />
+            <ChatbotFab />
           </div>
         ) : (
           <OrderBoard
@@ -310,9 +311,6 @@ export function KdsPage({ session, onLogout, onUnauthorized }: KdsPageProps) {
       />
 
       <KdsToast toast={toast} onClose={hideToast} />
-
-      {/* Global chatbot FAB — persists across all tabs */}
-      <ChatbotFab />
     </div>
   );
 }
